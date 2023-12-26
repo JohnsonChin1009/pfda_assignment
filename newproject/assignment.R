@@ -4,7 +4,8 @@
 # 3. Lim Ee Chian TP065138
 # 4. Yong Jie Yee TP078458
 
-#Step 1: Importing the dataset
-dataSet = read.csv("/kl_property_data.csv")
+Objective
+#Step 1: Importing the csv file as dataSet
+dataSet = read.csv("kl_property_data.csv")
 
-# C:\Users\shado\Desktop\pfda_assignment\newproject
+#Step 2: Cleaning the data
