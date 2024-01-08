@@ -1,7 +1,7 @@
 # Group
 # 1. Chin Hong Wei TP065390
 # 2. Loo Hui En TP065181
-# 3. Lim Ee Chian TP065138
+# 3. Lim Ee Chian TP06513
 # 4. Yong Jie Yee TP078458
 
 # Objectives
