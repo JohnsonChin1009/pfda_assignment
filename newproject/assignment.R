@@ -7,10 +7,14 @@
 # Objectives
 # Step 1: Importing the csv file as dataset
 
+# Cannot go below 51189
 # Ensuring that you extract the 
 dataSet = read.csv("kl_property_data.csv")
 
 #Step 2: Cleaning the data
+#Removing duplicated rows
+
+#
 
 
 ##Converting the $Price column into int variable type
@@ -22,6 +26,9 @@ dataSet = read.csv("kl_property_data.csv")
   dataSet$Price <- gsub("\\s", "", dataSet$Price)
   
   #Removing commas between the values and turning it into numerical variable type
-  dataSet$Price <- as.numeric(gsub(",", "", df$Price))
+  dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price))
+  
+  #Filter out rows where $Price is below 100,000
+  dataSet <- dataSet[dataSet$Price >= 100000,]
   
 #
