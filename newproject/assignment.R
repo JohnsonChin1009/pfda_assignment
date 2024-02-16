@@ -5,49 +5,104 @@
 # 4. Yong Jie Yee TP078458
 
 # Objectives
-# Step 1: Importing the csv file as dataset
 
-# Cannot go below 51189
-# Ensuring that you extract the 
+# Step 1: Importing the csv file as dataset
+# -----------------------------------------------------
 dataSet = read.csv("kl_property_data.csv")
 
-#Step 2: Cleaning the data
-#Removing duplicated rows
+# Step 2: Data Exploration
+# -----------------------------------------------------
+# Exploring the data to further understand how the data is structured
+# and what are the data types present in the data set
+### Main variables we're looking into is $Price
 
-#
+## Exploring variable types in the data set
+  str(dataSet)
 
+## Identify the number of rows in the data set
+  nrows(dataSet)
 
-##Converting the $Price column into int variable type
+## Identifying the names of the columns
+  names(dataSet)
 
-  #Removing the RM heading
+## Counting the number of missing values in the data set
+  sum(is.na(dataSet))
+
+## Checking the structure of the data set
+  summary(dataSet)
+
+## Checking the number of duplicated rows
+  numberOfDuplicatedRows <- sum(duplicated(dataSet))
+
+## Checking the $Price column for any outliers
+# Step 3: Data Cleaning & Pre-processing
+# -----------------------------------------------------
+# Pre-processing the data to ensure that the data is suitable for
+# data analysis
+
+## $Price column
+
+#Removing the RM heading
   dataSet$Price <- gsub("RM", "", dataSet$Price)
   
-  #Removing any white-spaces
+#Removing any white-spaces
   dataSet$Price <- gsub("\\s", "", dataSet$Price)
   
-  #Removing commas between the values and turning it into numerical variable type
+#Removing commas between the values and turning it into integer variable type
   dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price))
   
-  #Filter out rows where $Price is below 100,000
+#Removing rows where $Price value is empty, "NA" or 0
+  dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ]
+ 
+#Filter out rows where $Price is below 100,000
   dataSet <- dataSet[dataSet$Price >= 100000,]
+
+## $Furnishing column
   
-#---------------------------------------------- Ee Chian's Add on code ---------------------------------------------------
+#Extract Furnishing information using regular expression
+  dataSet$Furnishing <- str_extract(dataSet$Furnishing, "(?i)Fully Furnished|Unfurnished|Partly Furnished")
+  
+#If there is no Furnishing information, set it to Unknown
+  dataSet$Furnishing[is.na(dataSet$Furnishing)] <- "Unknown"
 
-# Step 1: Import the csv file which is the original dataset. 
-install.packages("tidyverse")   # The downloaded binary packages are in "C:\Users\Lim Ee Chian\AppData\Local\Temp\RtmpYDAMW1\downloaded_packages"
-library(tidyverse)
-# *** Ensuring that you extract the dataSet = read.csv("5. kl_property_data.csv")
-dataSet <- read.csv("C:\\Users\\Lim Ee Chian\\Documents\\Ee Chian APU Degree SE\\SEM 1\\Programming For Data Analysis\\PFDA ass\\5. kl_property_data.csv")
+## $Rooms, $Bathrooms, $Carparks Column
 
+#Replacing empty strings and NA with 0 in the $Rooms column
+  dataSet$Rooms[dataSet$Rooms == ""] <- "0"
+  dataSet$Rooms[is.na(dataSet$Rooms)] <- "0"
 
-# Step 2: Identify how many rows there are in the original dataset. Rows: 53883
-dataSet
-nrow(dataSet)
+#Replacing empty strings and NA with 0 in the $Bathrooms column
+  dataSet$Bathrooms[dataSet$Bathrooms == ""] <- "0"
+  dataSet$Bathrooms[is.na(dataSet$Bathrooms)] <- "0"
+  
+#Replacing empty strings and NA with 0 in the $Carparks column
+  dataSet$Car.Parks[dataSet$Car.Parks == ""] <- "0"
+  dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- "0"
 
+# Step 4: Data Analysis
+# -----------------------------------------------------
+# Performing data analysis on the processed and cleaned data to discover
+# answers for objectives and to justify the hypothesis
 
-# Step 3:	Check the structure of the dataset, using `summary(dataSet)`.
-summary(dataSet)
-
+# Loo Hui En TP065181 (Objective 1)
+# -----------------------------------------------------
+# Add your code here
+# -----------------------------------------------------
+  
+# Yong Jie Yee TP078458 (Objective 2)
+# -----------------------------------------------------
+# Add your code here
+ # -----------------------------------------------------
+  
+# Chin Hong Wei TP065390 (Objective 3)
+# -----------------------------------------------------
+# Add your code here
+# -----------------------------------------------------
+  
+# Lim Ee Chian TP065138 (Objective 4)
+# -----------------------------------------------------
+# Add your code here
+# -----------------------------------------------------
 
 # Step 4:	Find rows where only the “Location” column has data while all other columns are empty & Remove the identified rows from the original dataset.
 location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
@@ -56,45 +111,6 @@ print(location_only_rows)
 nrow(location_only_rows)
 # [1] 25
 dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
-
-
-# Step 5:	Identify how many rows there are after the 1st row cleaning. Rows: 53858
-nrow(dataSet)
-# [1] 53858   [First Row Cleaning]
-
-
-# Step 6: Identify how many duplicated rows. Row: 25 & Remove duplicated rows in the dataset.
-# ?? duplicated(dataSet)
-dataSet = unique(dataSet)
-nrow(dataSet)
-# [1] 49398   [Second Row Cleaning]
-
-# OR
-
-# *** Remove duplicate rows
-dataSet <- dataSet[!duplicated(dataSet), ]   
-
-
-# Step 7:	Identify how many rows there are after 2nd row cleaning. Rows: 49398
-nrow(dataSet)
-# [1] 49398   [Second Row Cleaning]
-
-
-# Step 8:	Replace missing values in `Car Parks` column with integer 0.
-dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- 0
-dataSet
-
-
-# Step 9:	Replace missing values in `Furnishing` column with “Unknown”.
-install.packages("stringr")   # The downloaded binary packages are in "C:\Users\Lim Ee Chian\AppData\Local\Temp\RtmpARXFjH\downloaded_packages"
-library(stringr)
-# *** Extract Furnishing information using regular expression
-dataSet$Furnishing <- str_extract(dataSet$Furnishing, "(?i)Fully Furnished|Unfurnished|Partly Furnished")
-# *** If there is no Furnishing information, set it to Unknown
-dataSet$Furnishing[is.na(dataSet$Furnishing)] <- "Unknown"
-dataSet
-nrow(dataSet)
-
 
 # Step 10: Replace “Studio” in `Rooms` column with integer 1.
 # *** Replace the occurrences of "Studio" in the `Rooms` column with the integer 1, use the mutate function from the dplyr package. 
@@ -167,21 +183,6 @@ dataSet
 nrow(dataSet)
 
 
-# Step 18: Convert the `Price` column into integer variable datatype.
-# *** Converting the $Price column into int variable type
-dataSet$Price <- gsub("RM", "", dataSet$Price)   #Removing the RM heading
-dataSet$Price <- gsub("\\s", "", dataSet$Price)   #Removing any white-spaces
-dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price))   #Removing commas between the values and turning it into numerical variable type
-dataSet
-
-# OR
-
-# *** Convert `Price` column to numeric (remove currency symbol and commas)
-dataSet$Price <- as.numeric(gsub("[^0-9.]", "", dataSet$Price))
-dataSet
-nrow(dataSet)
-
-
 # Step 19: Clean the `Size` column, by removing "sq. ft." and commas, and handle multiplication sign "x" (if present).
 # *** Remove "sq. ft."
 dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
@@ -200,7 +201,6 @@ dataSet
 nrow(dataSet)
 
 
-# Step 20: Check the structure of the current dataset again, using `summary(dataSet)`.
-summary(dataSet)
 
-
+#Extra Notes
+# Cannot go below 51189
