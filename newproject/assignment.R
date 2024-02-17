@@ -8,7 +8,7 @@
 
 # Step 1: Importing the csv file as dataset
 # -----------------------------------------------------
-dataSet = read.csv("kl_property_data.csv")
+dataSet_original = read.csv("kl_property_data.csv")
 
 # Step 2: Data Exploration
 # -----------------------------------------------------
@@ -19,8 +19,9 @@ dataSet = read.csv("kl_property_data.csv")
 ## Exploring variable types in the data set
   str(dataSet)
 
-## Identify the number of rows in the data set
-  nrows(dataSet)
+## Identify the number of rows and cols in the data set
+  nrow(dataSet)
+  ncols(dataSet)
 
 ## Identifying the names of the columns
   names(dataSet)
@@ -31,32 +32,47 @@ dataSet = read.csv("kl_property_data.csv")
 ## Checking the structure of the data set
   summary(dataSet)
 
-## Checking the number of duplicated rows
-  numberOfDuplicatedRows <- sum(duplicated(dataSet))
-
-## Checking the $Price column for any outliers
 # Step 3: Data Cleaning & Pre-processing
 # -----------------------------------------------------
 # Pre-processing the data to ensure that the data is suitable for
 # data analysis
 
-## $Price column
+## Formatting the $Price column into numeric data type
+  dataSet$Price <- gsub("RM", "", dataSet$Price)  # Removing the RM heading
+  dataSet$Price <- gsub("\\s", "", dataSet$Price) # Removing any white-spaces
+  
+  # Removing commas between the values and turning it into integer variable type
+  dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price)) 
 
-#Removing the RM heading
-  dataSet$Price <- gsub("RM", "", dataSet$Price)
+## Formatting the $Rooms column into integer data type
+  dataSet <- dataSet %>%      # Replacing empty strings and NA value in Rooms to 0
+    mutate(Rooms = na_if(Rooms, "")) %>%
+    mutate(Rooms = ifelse(is.na(Rooms), 0, Rooms))
   
-#Removing any white-spaces
-  dataSet$Price <- gsub("\\s", "", dataSet$Price)
+  dataSet <- dataSet %>%
+    mutate(
+      # Compute the formula of x+y to the result after addition
+      Rooms = ifelse(grepl("\\+", Rooms, fixed = TRUE), eval(parse(text = gsub("\\+", "+", Rooms))), Rooms),
+      
+      # Replace values that have "Studio" to 1
+      Rooms = ifelse(Rooms == "Studio", 1, Rooms),
+      
+      # Replacing Strings for "x Above", extract x as numeric value
+      Rooms = ifelse(grepl("\\d+ Above", Rooms), as.numeric(str_extract(Rooms, "\\d+")), Rooms)
+    )
   
-#Removing commas between the values and turning it into integer variable type
-  dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price))
+#Checking whether they are empty values within the $Price column
+  sum(is.na(dataSet$Price))
   
 #Removing rows where $Price value is empty, "NA" or 0
   dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ]
- 
+  
 #Filter out rows where $Price is below 100,000
   dataSet <- dataSet[dataSet$Price >= 100000,]
 
+# Identifying any outliers in $Price column
+  boxplot(dataSet$Price)
+  
 ## $Furnishing column
   
 #Extract Furnishing information using regular expression
@@ -96,7 +112,9 @@ dataSet = read.csv("kl_property_data.csv")
   
 # Chin Hong Wei TP065390 (Objective 3)
 # -----------------------------------------------------
-# Add your code here
+
+  
+  
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
