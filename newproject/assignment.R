@@ -14,7 +14,11 @@ dataSet_original = read.csv("kl_property_data.csv")
 # -----------------------------------------------------
 # Exploring the data to further understand how the data is structured
 # and what are the data types present in the data set
-### Main variables we're looking into is $Price
+
+# Initiating dependencies
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
 
 ## Exploring variable types in the data set
   str(dataSet)
@@ -32,54 +36,39 @@ dataSet_original = read.csv("kl_property_data.csv")
 ## Checking the structure of the data set
   summary(dataSet)
 
+# Checking whether they are empty values within the $Price column
+  sum(is.na(dataSet$Price))
+  
 # Step 3: Data Cleaning & Pre-processing
 # -----------------------------------------------------
 # Pre-processing the data to ensure that the data is suitable for
 # data analysis
 
 ## Formatting the $Price column into numeric data type
-  dataSet$Price <- gsub("RM", "", dataSet$Price)  # Removing the RM heading
-  dataSet$Price <- gsub("\\s", "", dataSet$Price) # Removing any white-spaces
+    dataSet$Price <- gsub("RM", "", dataSet$Price)  # Removing the RM heading
+    dataSet$Price <- gsub("\\s", "", dataSet$Price) # Removing any white-spaces
   
   # Removing commas between the values and turning it into integer variable type
-  dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price)) 
+    dataSet$Price <- as.numeric(gsub(",", "", dataSet$Price)) 
+  
+  # Filter out rows where $Price is below 100,000
+    dataSet <- dataSet[dataSet$Price >= 100000,]
 
 ## Formatting the $Rooms column into integer data type
-  dataSet <- dataSet %>%      # Replacing empty strings and NA value in Rooms to 0
-    mutate(Rooms = na_if(Rooms, "")) %>%
-    mutate(Rooms = ifelse(is.na(Rooms), 0, Rooms))
+#  {Add Code here}
   
-  dataSet <- dataSet %>%
-    mutate(
-      # Compute the formula of x+y to the result after addition
-      Rooms = ifelse(grepl("\\+", Rooms, fixed = TRUE), eval(parse(text = gsub("\\+", "+", Rooms))), Rooms),
-      
-      # Replace values that have "Studio" to 1
-      Rooms = ifelse(Rooms == "Studio", 1, Rooms),
-      
-      # Replacing Strings for "x Above", extract x as numeric value
-      Rooms = ifelse(grepl("\\d+ Above", Rooms), as.numeric(str_extract(Rooms, "\\d+")), Rooms)
-    )
+## Standardize the $Furnishing column ensuring no N/A values
+  # Extract furnishing information using regular expression
+    dataSet$Furnishing <- str_extract(dataSet$Furnishing, "(?i)Fully Furnished|Unfurnished|Partly Furnished")
   
-#Checking whether they are empty values within the $Price column
-  sum(is.na(dataSet$Price))
+  # If the furnishing value is empty, replace with "Unknown"
+    dataSet$Furnishing[is.na(dataSet$Furnishing)] <- "Unknown"
   
-#Removing rows where $Price value is empty, "NA" or 0
-  dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ]
+    
+## Removing rows where $Price value is empty, "NA" or 0
+    dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ] 
   
-#Filter out rows where $Price is below 100,000
-  dataSet <- dataSet[dataSet$Price >= 100000,]
-
-# Identifying any outliers in $Price column
-  boxplot(dataSet$Price)
   
-## $Furnishing column
-  
-#Extract Furnishing information using regular expression
-  dataSet$Furnishing <- str_extract(dataSet$Furnishing, "(?i)Fully Furnished|Unfurnished|Partly Furnished")
-  
-#If there is no Furnishing information, set it to Unknown
-  dataSet$Furnishing[is.na(dataSet$Furnishing)] <- "Unknown"
 
 ## $Rooms, $Bathrooms, $Carparks Column
 
@@ -95,6 +84,13 @@ dataSet_original = read.csv("kl_property_data.csv")
   dataSet$Car.Parks[dataSet$Car.Parks == ""] <- "0"
   dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- "0"
 
+  
+# Check for any rows that only have values in the $Location column
+  location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
+  
+# Remove the rows that only have values in the $Location column
+  dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
+  
 # Step 4: Data Analysis
 # -----------------------------------------------------
 # Performing data analysis on the processed and cleaned data to discover
@@ -112,8 +108,27 @@ dataSet_original = read.csv("kl_property_data.csv")
   
 # Chin Hong Wei TP065390 (Objective 3)
 # -----------------------------------------------------
-
+# Question 1: Does furnishing status impact the average property price in Kuala Lumpur?
   
+  # Analysis 1.1: What are the average property prices for different property types?
+  averagePrices <- dataSet %>% group_by(Furnishing) %>% summarize(Average_Price = mean(Price, na.rm=TRUE))
+  
+  ggplot(averagePrices, aes(x = Furnishing, y = Average_Price)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(title = "Average Property Prices by Furnishing Status", x = "Furnishing Status", y = "Average Price (RM)")
+  
+  # Violin for Distribution
+  ggplot(dataSet, aes(x = Furnishing, y = Price)) +
+    geom_violin(fill = "skyblue") +
+    labs(title = "Property Prices Distribution by Furnishing Status", x = "Furnishing Status", y = "Price")
+  
+  median_prices <- dataSet %>%
+    group_by(Furnishing) %>%
+    summarize(Median_Price = median(Price, na.rm = TRUE))
+  
+  ggplot(median_prices, aes(x = Furnishing, y = Median_Price)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    labs(title = "Median Property Prices by Furnishing Status", x = "Furnishing Status", y = "Median Price")
   
 # -----------------------------------------------------
   
@@ -122,13 +137,8 @@ dataSet_original = read.csv("kl_property_data.csv")
 # Add your code here
 # -----------------------------------------------------
 
-# Step 4:	Find rows where only the “Location” column has data while all other columns are empty & Remove the identified rows from the original dataset.
-location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
-# Print or view the rows
-print(location_only_rows)
-nrow(location_only_rows)
-# [1] 25
-dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
+
+
 
 # Step 10: Replace “Studio” in `Rooms` column with integer 1.
 # *** Replace the occurrences of "Studio" in the `Rooms` column with the integer 1, use the mutate function from the dplyr package. 
@@ -154,16 +164,6 @@ dataSet <- dataSet %>%
   mutate(Size = na_if(Size, ""))
 dataSet
 nrow(dataSet)
-
-
-# Step 13: Replace empty values/strings in `Price` column with NA, using `na_if` function.
-library(dplyr)
-# *** Replace empty strings with <NA> in the `Price` column
-dataSet <- dataSet %>%
-  mutate(Price = na_if(Price, ""))
-dataSet
-nrow(dataSet)
-
 
 # Step 14: Separate the data in the `Size` column in the original dataset into 2 columns, which are `Area Type` and `Size`.
 # `Size` column is character type
