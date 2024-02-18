@@ -70,7 +70,7 @@ library(ggplot2)
       # Convert NA values to 0
       Rooms = ifelse(is.na(Rooms), 0, Rooms),
       
-      # Remove " Above" from values like "20 Above"
+      # Remove "Above" from values like "20 Above"
       Rooms = ifelse(grepl("\\d+ Above", Rooms), as.numeric(str_extract(Rooms, "\\d+")), Rooms),
     )
   
@@ -97,18 +97,8 @@ library(ggplot2)
   
   # If the furnishing value is empty, replace with "Unknown"
     dataSet$Furnishing[is.na(dataSet$Furnishing)] <- "Unknown"
-  
-    
-## Removing rows where $Price value is empty, "NA" or 0
-    dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ] 
-  
-  
 
 ## $Rooms, $Bathrooms, $Carparks Column
-
-#Replacing empty strings and NA with 0 in the $Rooms column
-  dataSet$Rooms[dataSet$Rooms == ""] <- "0"
-  dataSet$Rooms[is.na(dataSet$Rooms)] <- "0"
 
 #Replacing empty strings and NA with 0 in the $Bathrooms column
   dataSet$Bathrooms[dataSet$Bathrooms == ""] <- "0"
@@ -118,12 +108,17 @@ library(ggplot2)
   dataSet$Car.Parks[dataSet$Car.Parks == ""] <- "0"
   dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- "0"
 
-  
 # Check for any rows that only have values in the $Location column
   location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
   
+# Remove the rows where $Price value is empty, "NA" or 0
+  dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ]   
+  
 # Remove the rows that only have values in the $Location column
   dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
+  
+# Remove the rows where $Size value is empty empty, "NA"
+  dataSet <- dataSet[!(dataSet$Size == "" | is.na(dataSet$Size)), ]
   
 # Step 4: Data Analysis
 # -----------------------------------------------------
@@ -164,6 +159,18 @@ library(ggplot2)
     geom_bar(stat = "identity", fill = "skyblue") +
     labs(title = "Median Property Prices by Furnishing Status", x = "Furnishing Status", y = "Median Price")
   
+  summary_by_furnishing <- dataSet %>%
+    group_by(Furnishing) %>%
+    summarize(mean_price = mean(Price, na.rm = TRUE))
+  
+  ggplot(summary_by_furnishing, aes(x = Furnishing, y = mean_price, fill = Furnishing)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = "Mean Price by Furnishing Status",
+         x = "Furnishing Status",
+         y = "Mean Price") +
+    theme_minimal()
+  
+  
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
@@ -171,25 +178,6 @@ library(ggplot2)
 # Add your code here
 # -----------------------------------------------------
 
-
-
-
-# Step 10: Replace “Studio” in `Rooms` column with integer 1.
-# *** Replace the occurrences of "Studio" in the `Rooms` column with the integer 1, use the mutate function from the dplyr package. 
-library(dplyr)
-# Change "Studio" to 1 in the Rooms column, leave other NAs unaffected
-dataSet <- dataSet %>%
-  mutate(Rooms = replace(Rooms, Rooms == "Studio", 1))
-dataSet
-
-
-# Step 11: Replace empty values/strings in `Rooms` column with NA, using `na_if` function from the “dplyr” package.
-library(dplyr)
-# *** Replace empty strings with <NA> in the `Rooms` column
-dataSet <- dataSet %>%
-  mutate(Rooms = na_if(Rooms, ""))
-dataSet
-nrow(dataSet)
 
 # Step 12:	Replace the empty values/strings in `Size` column with NA, using `na_if` function from the “dplyr” package.
 library(dplyr)
