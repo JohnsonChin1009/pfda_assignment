@@ -46,7 +46,8 @@ library(tidyr)
 # Pre-processing the data to ensure that the data is suitable for
 # data analysis
 
-## Formatting the $Price column into numeric data type
+###
+# Formatting the $Price column into numeric data type
     dataSet$Price <- gsub("RM", "", dataSet$Price)  # Removing the RM heading
     dataSet$Price <- gsub("\\s", "", dataSet$Price) # Removing any white-spaces
   
@@ -58,9 +59,23 @@ library(tidyr)
 
   # Remove the rows where $Price value is empty, "NA" or 0
     dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ] 
-    
-## Formatting the $Rooms column into integer data type
-    
+###   
+  
+###    
+# Checking for outliers in the $Price column using boxplot
+    boxplot(dataSet$Price)
+      
+  # Identifying rows that are above 30 million & 15 million that is not Residential Land
+    rowsAbove30m <- nrow(dataSet[dataSet$Price >= 3.0e+07,])
+    rowsAbove15m <- nrow(dataSet[dataSet$Price >= 1.5e+07 & !grepl("^Residential Land", dataSet$Property.Type), ])
+      
+  # Removing rows that are above 30 million & 15 million that is not Residential Land
+    dataSet <- dataSet[dataSet$Price < 3.0e+07, ]
+    dataSet <- dataSet[dataSet$Price < 1.5e+07 | grepl("^Residential Land", dataSet$Property.Type), ]
+### 
+
+###
+# Formatting the $Rooms column into integer data type  
   initialCount <- sum(is.na(dataSet$Rooms) | dataSet$Rooms == "")
   
   dataSet <- dataSet %>%
@@ -94,7 +109,8 @@ library(tidyr)
   
   # Change the $Rooms column to numeric
     dataSet$Rooms <- as.numeric(dataSet$Rooms)
-  
+###
+    
 ## Pre-processing $Rooms and $Bathrooms columns based on $Property.Type column
   # Identify rows with "Residential Land" or its variants
     residential_land_rows <- which(grepl("Residential Land", dataSet$Property.Type))
@@ -126,8 +142,6 @@ library(tidyr)
 
 # Check for any rows that only have values in the $Location column
   location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
-  
-  
   
 # Remove the rows that only have values in the $Location column
   dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
@@ -166,7 +180,6 @@ library(tidyr)
   dataSet <- dataSet %>%
     mutate(Property.Style = na_if(Property.Type, ""))
   dataSet
-  nrow(dataSet)  
   
   
 # Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
@@ -174,12 +187,7 @@ library(tidyr)
   dataSet <- separate(dataSet, Property.Type, into = c("Property.Type", "Property.Style"), sep = "\\(")
 # *** Remove the trailing bracket in Property.Style column
   dataSet$Property.Style <- gsub("\\)", "", dataSet$Property.Style)
-  dataSet
-  nrow(dataSet)
-  
-view(dataSet)
-nrow(dataSet)
-  
+
 # Step 4: Data Analysis
 # -----------------------------------------------------
 # Performing data analysis on the processed and cleaned data to discover
