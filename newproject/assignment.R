@@ -125,6 +125,47 @@ library(ggplot2)
 # Remove the rows that only have values in the $Location column
   dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
   
+  
+  
+# Separate the data in the `Size` column in the original dataset into 2 columns, which are `Area Type` and `Size`.
+# `Size` column is character type
+  install.packages("tidyr")
+  library(tidyr)
+# *** Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
+  dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
+  dataSet
+  nrow(dataSet)
+  
+  
+  
+# Clean the `Size` column, by removing "sq. ft." and commas, and handle multiplication sign "x" (if present).
+# *** Remove "sq. ft."
+  dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
+  dataSet
+  nrow(dataSet)
+# *** Remove commas
+  dataSet$Size <- gsub(",", "", dataSet$Size)
+  dataSet
+  nrow(dataSet)
+# *** Handle multiplication sign "x" (if present)
+# Split Size into two columns based on "x" and convert to numeric
+  dataSet$Size <- ifelse(grepl("x", dataSet$Size),
+                         sapply(strsplit(dataSet$Size, "x"), function(x) as.numeric(x[1]) * as.numeric(x[2])),
+                         as.numeric(dataSet$Size))
+  dataSet
+  nrow(dataSet)
+  
+  
+  
+# Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
+# *** Separate Property.Type column into PropertyType and PropertyStyle
+  dataSet <- separate(dataSet, Property.Type, into = c("Property.Type", "Property.Style"), sep = "\\(")
+# *** Remove the trailing bracket in Property.Style column
+  dataSet$Property.Style <- gsub("\\)", "", dataSet$Property.Style)
+  dataSet
+  nrow(dataSet)
+  
+  
 # Step 4: Data Analysis
 # -----------------------------------------------------
 # Performing data analysis on the processed and cleaned data to discover
@@ -199,29 +240,12 @@ dataSet <- dataSet %>%
 dataSet
 nrow(dataSet)
 
-# Step 14: Separate the data in the `Size` column in the original dataset into 2 columns, which are `Area Type` and `Size`.
-# `Size` column is character type
-install.packages("tidyr")
-library(tidyr)
-# *** Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
-dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
-dataSet
-nrow(dataSet)
 
 
 # Step 15: Replace empty values/strings in `Area Type` column with NA, using `na_if` function.
 library(dplyr)
 dataSet <- dataSet %>%
   mutate(Area.Type = na_if(Area.Type, ""))
-dataSet
-nrow(dataSet)
-
-
-# Step 16: Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
-# *** Separate Property.Type column into PropertyType and PropertyStyle
-dataSet <- separate(dataSet, Property.Type, into = c("Property.Type", "Property.Style"), sep = "\\(")
-# *** Remove the trailing bracket in Property.Style column
-dataSet$Property.Style <- gsub("\\)", "", dataSet$Property.Style)
 dataSet
 nrow(dataSet)
 
@@ -235,22 +259,7 @@ dataSet
 nrow(dataSet)
 
 
-# Step 19: Clean the `Size` column, by removing "sq. ft." and commas, and handle multiplication sign "x" (if present).
-# *** Remove "sq. ft."
-dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
-dataSet
-nrow(dataSet)
-# *** Remove commas
-dataSet$Size <- gsub(",", "", dataSet$Size)
-dataSet
-nrow(dataSet)
-# *** Handle multiplication sign "x" (if present)
-# Split Size into two columns based on "x" and convert to numeric
-dataSet$Size <- ifelse(grepl("x", dataSet$Size),
-                       sapply(strsplit(dataSet$Size, "x"), function(x) as.numeric(x[1]) * as.numeric(x[2])),
-                       as.numeric(dataSet$Size))
-dataSet
-nrow(dataSet)
+
 
 
 
