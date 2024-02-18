@@ -18,6 +18,7 @@ dataSet_original = read.csv("kl_property_data.csv")
 # Initiating dependencies
 library(tidyverse)
 library(dplyr)
+library(stringr)
 library(ggplot2)
 
 ## Exploring variable types in the data set
@@ -55,7 +56,40 @@ library(ggplot2)
     dataSet <- dataSet[dataSet$Price >= 100000,]
 
 ## Formatting the $Rooms column into integer data type
-#  {Add Code here}
+    
+  initialCount <- sum(is.na(dataSet$Rooms) | dataSet$Rooms == "")
+  
+  dataSet <- dataSet %>%
+    mutate(
+      # Convert "Studio" to 1
+      Rooms = ifelse(Rooms == "Studio", 1, Rooms),
+      
+      # Convert Empty Strings to NA
+      Rooms = ifelse(Rooms == "", NA, Rooms),
+      
+      # Convert NA values to 0
+      Rooms = ifelse(is.na(Rooms), 0, Rooms),
+      
+      # Remove " Above" from values like "20 Above"
+      Rooms = ifelse(grepl("\\d+ Above", Rooms), as.numeric(str_extract(Rooms, "\\d+")), Rooms),
+    )
+  
+  # Identify values that match the X+Y pattern
+  x_plus_y_values <- dataSet$Rooms[grepl("\\d+\\+\\d+", dataSet$Rooms)]
+  
+  # Compute X+Y and replace the original values
+  dataSet$Rooms[grepl("\\d+\\+\\d+", dataSet$Rooms)] <- 
+    sapply(strsplit(x_plus_y_values, "\\+"), function(x) sum(as.numeric(x)))
+  
+  # Identify values that match the X+ pattern
+  x_plus_values <- dataSet$Rooms[grepl("\\d+\\+", dataSet$Rooms)]
+  
+  # Compute X+ and replace the original values
+  dataSet$Rooms[grepl("\\d+\\+", dataSet$Rooms)] <-
+    sapply(strsplit(x_plus_values, "\\+"), function(x) as.numeric(x[1]) + 1)
+  
+  # Change the $Rooms column to numeric
+  dataSet$Rooms <- as.numeric(dataSet$Rooms)
   
 ## Standardize the $Furnishing column ensuring no N/A values
   # Extract furnishing information using regular expression
