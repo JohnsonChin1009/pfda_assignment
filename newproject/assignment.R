@@ -91,6 +91,14 @@ library(ggplot2)
   # Change the $Rooms column to numeric
   dataSet$Rooms <- as.numeric(dataSet$Rooms)
   
+  # Identify rows with "Residential Land" or its variants
+  residential_land_rows <- which(grepl("Residential Land", dataSet$Property.Type))
+  
+  # Change Rooms and Bathrooms to NA for the identified rows
+  dataSet$Rooms[residential_land_rows] <- NA
+  dataSet$Bathrooms[residential_land_rows] <- NA
+  view(dataSet)
+  
 ## Standardize the $Furnishing column ensuring no N/A values
   # Extract furnishing information using regular expression
     dataSet$Furnishing <- str_extract(dataSet$Furnishing, "(?i)Fully Furnished|Unfurnished|Partly Furnished")
@@ -150,7 +158,11 @@ library(ggplot2)
   dataSet
   nrow(dataSet)
   
-  
+# Replace empty values/strings in ` Property Type` column with NA, using `na_if` function.
+  dataSet <- dataSet %>%
+    mutate(Property.Style = na_if(Property.Type, ""))
+  dataSet
+  nrow(dataSet)  
   
 # Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
 # *** Separate Property.Type column into PropertyType and PropertyStyle
@@ -160,12 +172,7 @@ library(ggplot2)
   dataSet
   nrow(dataSet)
   
-# Step 17: Replace empty values/strings in ` Property Type` column with NA, using `na_if` function.
-# *** Replace empty strings with <NA> in the `Property.Style` column
-  dataSet <- dataSet %>%
-    mutate(Property.Style = na_if(Property.Style, ""))
-  dataSet
-  nrow(dataSet)
+
   
   
 # Step 4: Data Analysis
