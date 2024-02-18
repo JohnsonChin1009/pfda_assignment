@@ -20,6 +20,7 @@ library(tidyverse)
 library(dplyr)
 library(stringr)
 library(ggplot2)
+library(tidyr)
 
 ## Exploring variable types in the data set
   str(dataSet)
@@ -130,10 +131,6 @@ library(ggplot2)
   
 # Separate the data in the `Size` column in the original dataset into 2 columns, which are `Area Type` and `Size`.
 # `Size` column is character type
-  install.packages("tidyr")
-  library(tidyr)
-  
-  
 # *** Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
   dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
   dataSet
@@ -158,11 +155,13 @@ library(ggplot2)
   dataSet
   nrow(dataSet)
   
+  
 # Replace empty values/strings in ` Property Type` column with NA, using `na_if` function.
   dataSet <- dataSet %>%
     mutate(Property.Style = na_if(Property.Type, ""))
   dataSet
   nrow(dataSet)  
+  
   
 # Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
 # *** Separate Property.Type column into PropertyType and PropertyStyle
@@ -172,8 +171,8 @@ library(ggplot2)
   dataSet
   nrow(dataSet)
   
-
-  
+view(dataSet)
+nrow(dataSet)
   
 # Step 4: Data Analysis
 # -----------------------------------------------------
