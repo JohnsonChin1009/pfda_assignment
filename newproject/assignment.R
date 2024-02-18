@@ -8,7 +8,7 @@
 
 # Step 1: Importing the csv file as dataset
 # -----------------------------------------------------
-dataSet_original = read.csv("kl_property_data.csv")
+dataSet = read.csv("kl_property_data.csv")
 
 # Step 2: Data Exploration
 # -----------------------------------------------------
@@ -160,6 +160,13 @@ library(ggplot2)
   dataSet
   nrow(dataSet)
   
+# Step 17: Replace empty values/strings in ` Property Type` column with NA, using `na_if` function.
+# *** Replace empty strings with <NA> in the `Property.Style` column
+  dataSet <- dataSet %>%
+    mutate(Property.Style = na_if(Property.Style, ""))
+  dataSet
+  nrow(dataSet)
+  
   
 # Step 4: Data Analysis
 # -----------------------------------------------------
@@ -238,13 +245,7 @@ dataSet
 nrow(dataSet)
 
 
-# Step 17: Replace empty values/strings in ` Property Type` column with NA, using `na_if` function.
-library(dplyr)
-# *** Replace empty strings with <NA> in the `Property.Style` column
-dataSet <- dataSet %>%
-  mutate(Property.Style = na_if(Property.Style, ""))
-dataSet
-nrow(dataSet)
+
 
 
 
