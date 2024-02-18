@@ -39,7 +39,7 @@ library(tidyr)
   summary(dataSet)
 
 # Checking whether they are empty values within the $Price column
-  sum(is.na(dataSet$Price))
+  sum(dataSet$Price == "")
   
 # Step 3: Data Cleaning & Pre-processing
 # -----------------------------------------------------
@@ -56,6 +56,9 @@ library(tidyr)
   # Filter out rows where $Price is below 100,000
     dataSet <- dataSet[dataSet$Price >= 100000,]
 
+  # Remove the rows where $Price value is empty, "NA" or 0
+    dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ] 
+    
 ## Formatting the $Rooms column into integer data type
     
   initialCount <- sum(is.na(dataSet$Rooms) | dataSet$Rooms == "")
@@ -76,34 +79,38 @@ library(tidyr)
     )
   
   # Identify values that match the X+Y pattern
-  x_plus_y_values <- dataSet$Rooms[grepl("\\d+\\+\\d+", dataSet$Rooms)]
+    x_plus_y_values <- dataSet$Rooms[grepl("\\d+\\+\\d+", dataSet$Rooms)]
   
   # Compute X+Y and replace the original values
-  dataSet$Rooms[grepl("\\d+\\+\\d+", dataSet$Rooms)] <- 
-    sapply(strsplit(x_plus_y_values, "\\+"), function(x) sum(as.numeric(x)))
+    dataSet$Rooms[grepl("\\d+\\+\\d+", dataSet$Rooms)] <- 
+      sapply(strsplit(x_plus_y_values, "\\+"), function(x) sum(as.numeric(x)))
   
   # Identify values that match the X+ pattern
-  x_plus_values <- dataSet$Rooms[grepl("\\d+\\+", dataSet$Rooms)]
+    x_plus_values <- dataSet$Rooms[grepl("\\d+\\+", dataSet$Rooms)]
   
   # Compute X+ and replace the original values
-  dataSet$Rooms[grepl("\\d+\\+", dataSet$Rooms)] <-
-    sapply(strsplit(x_plus_values, "\\+"), function(x) as.numeric(x[1]) + 1)
+    dataSet$Rooms[grepl("\\d+\\+", dataSet$Rooms)] <-
+      sapply(strsplit(x_plus_values, "\\+"), function(x) as.numeric(x[1]) + 1)
   
   # Change the $Rooms column to numeric
-  dataSet$Rooms <- as.numeric(dataSet$Rooms)
+    dataSet$Rooms <- as.numeric(dataSet$Rooms)
   
+## Pre-processing $Rooms and $Bathrooms columns based on $Property.Type column
   # Identify rows with "Residential Land" or its variants
-  residential_land_rows <- which(grepl("Residential Land", dataSet$Property.Type))
+    residential_land_rows <- which(grepl("Residential Land", dataSet$Property.Type))
   
   # Change Rooms and Bathrooms to NA for the identified rows
-  dataSet$Rooms[residential_land_rows] <- NA
-  dataSet$Bathrooms[residential_land_rows] <- NA
-  view(dataSet)
-  
+    dataSet$Rooms[residential_land_rows] <- NA
+    dataSet$Bathrooms[residential_land_rows] <- NA
+    view(dataSet)
+
 ## Standardize the $Furnishing column ensuring no N/A values
   # Extract furnishing information using regular expression
     dataSet$Furnishing <- str_extract(dataSet$Furnishing, "(?i)Fully Furnished|Unfurnished|Partly Furnished")
   
+  # If the Property.Type starts with "Residential Land", replace furnishing value with "Vacant Land"
+    dataSet$Furnishing[grep("^Residential Land", dataSet$Property.Type)] <- "Vacant Land"
+    
   # If the furnishing value is empty, replace with "Unknown"
     dataSet$Furnishing[is.na(dataSet$Furnishing)] <- "Unknown"
 
@@ -120,8 +127,7 @@ library(tidyr)
 # Check for any rows that only have values in the $Location column
   location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
   
-# Remove the rows where $Price value is empty, "NA" or 0
-  dataSet <- dataSet[!(dataSet$Price == "" | is.na(dataSet$Price) | dataSet$Price == 0), ]   
+  
   
 # Remove the rows that only have values in the $Location column
   dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
