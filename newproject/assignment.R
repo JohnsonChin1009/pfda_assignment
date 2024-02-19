@@ -16,6 +16,7 @@ dataSet = read.csv("kl_property_data.csv")
 # and what are the data types present in the data set
 
 # Initiating dependencies
+
 library(tidyverse)
 library(dplyr)
 library(stringr)
@@ -139,12 +140,6 @@ library(tidyr)
 #Replacing empty strings and NA with 0 in the $Carparks column
   dataSet$Car.Parks[dataSet$Car.Parks == ""] <- "0"
   dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- "0"
-
-# Check for any rows that only have values in the $Location column
-  location_only_rows <- dataSet[rowSums(dataSet != "" & !is.na(dataSet)) == 1, ]
-  
-# Remove the rows that only have values in the $Location column
-  dataSet <- dataSet[!(rownames(dataSet) %in% rownames(location_only_rows)), ]
   
 # Remove the rows where $Size value is empty, "NA"
   dataSet <- dataSet[!(dataSet$Size == "" | is.na(dataSet$Size)), ]
@@ -205,40 +200,24 @@ library(tidyr)
   
 # Chin Hong Wei TP065390 (Objective 3)
 # -----------------------------------------------------
-# Question 1: Does furnishing status impact the average property price in Kuala Lumpur?
-  
-  # Analysis 1.1: What are the average property prices for different property types?
-  averagePrices <- dataSet %>% group_by(Furnishing) %>% summarize(Average_Price = mean(Price, na.rm=TRUE))
-  
-  ggplot(averagePrices, aes(x = Furnishing, y = Average_Price)) +
-    geom_bar(stat = "identity", fill = "skyblue") +
-    labs(title = "Average Property Prices by Furnishing Status", x = "Furnishing Status", y = "Average Price (RM)")
-  
-  # Violin for Distribution
-  ggplot(dataSet, aes(x = Furnishing, y = Price)) +
-    geom_violin(fill = "skyblue") +
-    labs(title = "Property Prices Distribution by Furnishing Status", x = "Furnishing Status", y = "Price")
-  
-  median_prices <- dataSet %>%
-    group_by(Furnishing) %>%
-    summarize(Median_Price = median(Price, na.rm = TRUE))
-  
-  ggplot(median_prices, aes(x = Furnishing, y = Median_Price)) +
-    geom_bar(stat = "identity", fill = "skyblue") +
-    labs(title = "Median Property Prices by Furnishing Status", x = "Furnishing Status", y = "Median Price")
-  
-  summary_by_furnishing <- dataSet %>%
-    group_by(Furnishing) %>%
-    summarize(mean_price = mean(Price, na.rm = TRUE))
-  
-  ggplot(summary_by_furnishing, aes(x = Furnishing, y = mean_price, fill = Furnishing)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    labs(title = "Mean Price by Furnishing Status",
-         x = "Furnishing Status",
-         y = "Mean Price") +
-    theme_minimal()
-  
-  
+# Analysis 1: Analyis of Distribution of Furnishing Status
+  furnishing_counts <- table(dataSet$Furnishing)
+
+# Create a data frame from the table
+furnishing_data <- as.data.frame(furnishing_counts)
+furnishing_data$Furnishing <- rownames(furnishing_data)
+
+# Calculate percentages
+furnishing_data$Percentage <- (furnishing_data$Freq / sum(furnishing_data$Freq)) * 100
+
+# Plot using ggplot2
+ggplot(furnishing_data, aes(x = "", y = Freq, fill = Furnishing)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  geom_text(aes(label = paste(round(Percentage, 1), "%")), position = position_stack(vjust = 0.5)) +
+  labs(title = "Distribution of Furnishing Status")
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
