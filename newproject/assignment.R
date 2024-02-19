@@ -169,19 +169,17 @@ library(tidyr)
                          as.numeric(dataSet$Size))
   dataSet
   nrow(dataSet)
-  
-  
-# Replace empty values/strings in ` Property Type` column with NA, using `na_if` function.
-  dataSet <- dataSet %>%
-    mutate(Property.Style = na_if(Property.Type, ""))
-  dataSet
-  
-  
+
 # Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
 # *** Separate Property.Type column into PropertyType and PropertyStyle
   dataSet <- separate(dataSet, Property.Type, into = c("Property.Type", "Property.Style"), sep = "\\(")
 # *** Remove the trailing bracket in Property.Style column
   dataSet$Property.Style <- gsub("\\)", "", dataSet$Property.Style)
+  
+# Replace empty values/strings in ` Property Style` column with NA, using `na_if` function.
+  dataSet <- dataSet %>%
+    mutate(Property.Style = na_if(Property.Style, ""))
+  dataSet
 
 # Step 4: Data Analysis
 # -----------------------------------------------------
