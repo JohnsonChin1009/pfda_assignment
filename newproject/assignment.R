@@ -140,12 +140,13 @@ library(tidyr)
   
   
   
-### Remove and Format Size column  
-# Remove the rows where $Size value is empty, "NA"
+### Remove and Format $Size column  
+
+# Remove rows where $Size value is empty, "NA"
   dataSet <- dataSet[!(dataSet$Size == "" | is.na(dataSet$Size)), ]
   nrow(dataSet)
   
-# Separate the data in the `Size` column in the original dataset into 2 columns, which are `Area Type` and `Size`.
+# Separate data in the $Size column in the original dataset into 2 columns, which are `Area Type` and `Size`.
   # `Size` column is character type
   # Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
   dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
@@ -158,7 +159,7 @@ library(tidyr)
   dataSet$Size <- gsub(",", "", dataSet$Size)
   
   
-# Identify values that need processing 
+# Identify `Size` column values that need processing 
   size_values_to_process <- dataSet$Size[grepl("[^0-9]", dataSet$Size)]
   
   # Process values with non-digit characters
@@ -184,25 +185,24 @@ library(tidyr)
       result <- as.numeric(value)
     }
     
-    # Replace the original value with the result
+    # Replace original value in `Size` column with the result
     dataSet$Size[dataSet$Size == value] <- result
   }  
   
-# Remove "-"  
+# Remove "-" in the `Size` column
   dataSet$Size <- gsub("-", "", dataSet$Size)  # Remove "-"
   
-#Replacing empty strings and NA with 0 in the $Size column
+#Replacing empty strings "" and NA with 0 in the `Size` column
   # Replace NA values with 0
   dataSet$Size[is.na(dataSet$Size)] <- 0
   # Replace "" values with 0
   dataSet$Size <- ifelse(dataSet$Size == "", 0, dataSet$Size)
   
-# Change the $Size column to integer
-  dataSet$Size <- as.integer(dataSet$Size)
+# Change the `Size` column to numeric
+  dataSet$Size <- as.numeric(dataSet$Size)
   
 ###  
   
-
 
 # Separate Property.Type column into Property.Type and Property.Style
 dataSet <- dataSet %>%
@@ -222,9 +222,7 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   dataSet <- dataSet %>%
     mutate(Property.Style = na_if(Property.Style, ""))
 
-  dataSet
-  nrow(dataSet)
-
+  
 # Step 4: Data Analysis
 # -----------------------------------------------------
 # Performing data analysis on the processed and cleaned data to discover
@@ -511,7 +509,174 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   
 # Lim Ee Chian TP065138 (Objective 4)
 # -----------------------------------------------------
-# Add your code here
+# Objective 4: To investigate the relationship between property size and property prices in Kuala Lumpur.
+
+#Descriptive Analysis
+  
+# Analysis 1: What is the distribution of property prices based on their size and area type in Kuala Lumpur?
+# Visualization Technique: Grouped Bar Chart
+  
+  # Create Size Ranges 
+  size_ranges <- cut(dataSet$Size, breaks = c(0, 1000, 2000, 3000, 4000, 5000, Inf),
+                     labels = c("0-1000", "1001-2000", "2001-3000", "3001-4000", "4001-5000", "5000+"),
+                     include.lowest = TRUE)
+  
+  # Add Size Ranges as new column to dataSet
+  dataSet$Size_Range <- size_ranges
+  
+  # Grouped Bar Chart for Distribution of Property Prices based on Size Ranges and Area Types
+  ggplot(dataSet, aes(x = Size_Range, y = Price, fill = Area.Type)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = "Distribution of Property Prices based on Size Ranges and Area Types",
+         x = "Size Range (sqft)",
+         y = "Property Price (RM)",
+         fill = "Area Type") +
+    theme_grey() +
+    scale_y_continuous(labels = scales::comma) 
+  
+  
+  
+# Analysis 2: How do property sizes vary across different area types in Kuala Lumpur?
+# Visualization Technique: Box Plot
+  
+  # Calculate Correlation Coefficient
+  cor_coef <- cor(dataSet$Size, dataSet$Price)
+  
+  # Box Plot for Property Sizes Variation across Different Area Types
+  ggplot(dataSet, aes(x = Area.Type, y = Size, fill = Area.Type)) +
+    geom_boxplot() +
+    geom_text(aes(label = paste("Correlation:", round(cor_coef, 2))),
+              x = Inf, y = Inf, hjust = 1, vjust = 1, size = 4) +  
+    labs(title = "Property Sizes Variation across Different Area Types",
+         x = "Area Type",
+         y = "Property Size (sqft)",
+         fill = "Area Type") +
+    theme_grey() +
+    scale_y_discrete() 
+  
+  
+  
+# Analysis 3:	What is the average property price per square foot for different are types in Kuala Lumpur?
+# Visualization Technique: Grouped Bar Chart
+  
+  # Calculate Price per Square Foot
+  dataSet$PricePerSqFt <- dataSet$Price / dataSet$Size
+  
+  # Identify Outliers
+  outliers <- boxplot(dataSet$PricePerSqFt, plot = FALSE)$out
+  
+  # Create a temporary filteredDataSet
+  filteredDataSet <- dataSet[!dataSet$PricePerSqFt %in% outliers, ]
+  ## explain why need to create a temporary filtered dataset, because there is many size 0
+  
+  # Calculate average price per square foot by area type
+  averagePricePerSqFt <- filteredDataSet %>%
+    group_by(Area.Type) %>%
+    summarize(Avg_PricePerSqFt = mean(PricePerSqFt, na.rm = TRUE))
+  
+  # Bar Chart for Average Property Price per Square Foot for Different Area Types
+  ggplot(averagePricePerSqFt, aes(x = Area.Type, y = Avg_PricePerSqFt, fill = Area.Type)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.6, color = "black") +
+    labs(title = "Average Property Price per Square Foot for Different Area Types",
+         x = "Area Type",
+         y = "Average Price per Square Foot (RM/sqft)",
+         fill = "Area Type") +
+    theme_grey() +
+    scale_y_continuous(labels = scales::comma)
+  
+  
+  
+# Analysis 4: What are the average property prices for different property size?
+# Visualization Technique: Grouped Bar Chart
+  
+  # Create Size Ranges 
+  size_ranges <- cut(dataSet$Size, breaks = c(0, 1000, 2000, 3000, 4000, 5000, Inf), 
+                     labels = c("0-1000", "1001-2000", "2001-3000", "3001-4000", "4001-5000", "5000+"),
+                     include.lowest = TRUE)
+  
+  # Add Size Ranges as new column to dataSet
+  dataSet$Size_Range <- size_ranges
+  
+  # Set colors for each Size Range
+  size_range_colors <- c("0-1000" = "skyblue", "1001-2000" = "pink", "2001-3000" = "lightgreen",
+                         "3001-4000" = "orange", "4001-5000" = "purple", "5000+" = "red")
+  
+  # Calculate Average Property Prices for different Size Range
+  averagePricesBySize <- dataSet %>% group_by(Size_Range) %>% summarize(Average_Price = mean(Price, na.rm = TRUE))
+  
+  # Bar chart for Average Property Prices by Size Ranges
+  ggplot(averagePricesBySize, aes(x = Size_Range, y = Average_Price, fill = Size_Range)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Average Property Prices by Size Ranges",
+         x = "Size Range (sqft)",
+         y = "Average Property Price (RM)") +
+    theme_grey() +
+    scale_fill_manual(values = size_range_colors, name = "Size Range (sqft)") +  
+    scale_y_continuous(labels = scales::comma) +
+    theme(legend.position = "right")  
+  
+  
+  
+# Prescriptive Analysis - Questions
+  
+# Analysis 5: How can property developers optimize property prices based on size and area type in Kuala Lumpur?
+# Visualization Technique: Bubble Chart
+  
+  # Create Size ranges
+  size_ranges <- cut(dataSet$Size, breaks = c(0, 1000, 2000, 3000, 4000, 5000, Inf), 
+                     labels = c("0-1000", "1001-2000", "2001-3000", "3001-4000", "4001-5000", "5000+"),
+                     include.lowest = TRUE)
+  
+  # Add Size Ranges as new column to dataSet
+  dataSet$Size_Range <- size_ranges
+  
+  # Formula for Optimization Magnitude
+  dataSet$Optimize_Magnitude <- with(dataSet, (Size * Price) / 1000000)
+  
+  # Bubble Chart for Optimizing Property Prices based on Size Ranges and Area Types
+  gg <- ggplot(dataSet, aes(x = Size_Range, y = Price, size = Optimize_Magnitude, color = Area.Type, text = paste("Size Range: ", Size_Range, "<br>Price: RM", Price, "<br>Opt. Magnitude: ", Optimize_Magnitude))) +
+    geom_point(alpha = 0.7) +
+    labs(title = "Optimizing Property Prices based on Size Ranges and Area Types",
+         x = "Size Range (sqft)",
+         y = "Property Price (RM)",
+         size = "Optimization Magnitude",
+         color = "Area Type") +
+    theme_grey() +
+    scale_size_continuous(labels = scales::comma) +  
+    scale_y_continuous(labels = scales::comma)
+  
+# Additional Features
+  library(plotly)
+  # Viewer for interactivity - Convert ggplot to plotly to show interactive Bubble Chart 
+  p <- ggplotly(gg, tooltip = "text")
+  p
+  
+  
+  
+# Analysis 6: Given the current market conditions, how can property listings such as property size and area type be optimized for better pricing outcomes?
+# Visualization Technique: Scatter Plot
+  
+  # Create Size ranges
+  size_ranges <- cut(dataSet$Size, breaks = c(0, 1000, 2000, 3000, 4000, 5000, Inf), 
+                     labels = c("0-1000", "1001-2000", "2001-3000", "3001-4000", "4001-5000", "5000+"),
+                     include.lowest = TRUE)
+  
+  # Add Size Ranges as new column to dataSet
+  dataSet$Size_Range <- size_ranges
+  
+  # Scatter Plot for Optimizing Property Listings for Better Pricing Outcomes
+  ggplot(dataSet, aes(x = Size_Range, y = Price, color = Area.Type)) +
+    geom_point(alpha = 1.0) +
+    labs(title = "Optimizing Property Listings for Better Pricing Outcomes",
+         x = "Size Range (sqft)",
+         y = "Property Price (RM)",
+         color = "Area Type") +
+    theme_grey() +
+    scale_x_discrete() +
+    scale_y_continuous(labels = scales::comma)  
+  
+  
+  
 # -----------------------------------------------------
 
 
