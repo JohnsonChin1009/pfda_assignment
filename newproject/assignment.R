@@ -2,7 +2,7 @@
 # 1. Chin Hong Wei TP065390
 # 2. Loo Hui En TP065181
 # 3. Lim Ee Chian TP065138
-# 4. Yong Jie Yee TP078458
+# 4. Yong Jie Yee TP078548
 
 # Objectives
 
@@ -610,7 +610,7 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
     scale_fill_manual(values = custom_color_palette)
   
 # -----------------------------------------------------
-# Yong Jie Yee TP078458 (Objective 2)
+# Yong Jie Yee TP078548 (Objective 2)
 # -----------------------------------------------------
   # Objective 2: Does properties that have a proportionate number of rooms and bathrooms have a higher price?
   
