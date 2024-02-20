@@ -305,6 +305,11 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   # Analysis 2.3: What are the average property prices for numbers of bathrooms?
   library(scales)  # Load the scales package for formatting
   
+ 
+  
+  # Analysis 2.3: What are the average property prices for numbers of bathrooms?
+  library(scales)  # Load the scales package for formatting
+
   # Categorize properties based on the number of bathrooms into ranges
   dataSet$Bathroom_Range <- cut(dataSet$Bathrooms, 
                                 breaks = c(-Inf, 1, 3, 5, 8, Inf), 
@@ -371,6 +376,7 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   
   #Analysis 2-5 What are the average property prices for numbers of bathrooms and numbers of rooms?
   
+
   # Calculate the number of rooms without attached bathrooms, rooms with attached bathrooms, and public bathrooms
   dataSet$Rooms_No_Attach_Bathroom <- pmax(0, dataSet$Rooms - dataSet$Bathrooms)
   dataSet$Rooms_With_Attach_Bathroom <- pmin(dataSet$Rooms, dataSet$Bathrooms)
@@ -414,6 +420,8 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   bathroom_frequency <- dataSet %>%
     group_by(Bathroom_Range) %>%
     summarize(Bathroom_Frequency = n())
+  group_by(Bathroom_Range) %>%
+  summarize(Bathroom_Frequency = n())
   # Categorize rooms into ranges
   dataSet$Room_Range <- cut(dataSet$Rooms, breaks = c(0, 2, 4, 6, 8, 10, 12, Inf), labels = c("1-2", "3-4", "5-6", "7-8", "9-10", "11-12", "12+"))
   # Count the frequency of each range of rooms
@@ -444,6 +452,32 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
       axis.text.x = element_text(angle = 45, hjust = 1)  
     ) +
     scale_color_manual(values = c("blue", "red"), labels = c("Bathrooms", "Rooms"))
+  group_by(Room_Range) %>%
+  summarize(Room_Frequency = n())
+
+  # Combine the data for both bathrooms and rooms
+  combined_data <- merge(bathroom_frequency, room_frequency, by.x = "Bathroom_Range", by.y = "Room_Range", all = TRUE)
+
+  # Plot the frequency of properties by number of bathrooms and rooms using a line graph
+  ggplot(combined_data, aes(x = Bathroom_Range)) +
+  geom_line(aes(y = Bathroom_Frequency, color = "Bathrooms"), size = 1.5) +
+  geom_point(aes(y = Bathroom_Frequency, color = "Bathrooms"), size = 3) +
+  geom_line(aes(y = Room_Frequency, color = "Rooms"), linetype = "dashed", size = 1.5) +
+  geom_point(aes(y = Room_Frequency, color = "Rooms"), shape = 1, size = 3) +
+  geom_text(aes(y = ifelse(!is.na(Bathroom_Frequency), Bathroom_Frequency, Room_Frequency),
+                label = ifelse(!is.na(Bathroom_Frequency), as.character(Bathroom_Frequency), as.character(Room_Frequency))), 
+            hjust = -0.2, vjust = 0.5, size = 3.5, color = "black", fontface = "bold") +  
+  labs(
+    title = "Frequency of Properties by Number of Bathrooms and Rooms",
+    x = "Number of Bathrooms and Rooms",
+    y = "Frequency"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",  
+    axis.text.x = element_text(angle = 45, hjust = 1)  
+  ) +
+  scale_color_manual(values = c("blue", "red"), labels = c("Bathrooms", "Rooms"))
   
  # -----------------------------------------------------
   
