@@ -138,39 +138,82 @@ library(tidyr)
   dataSet$Car.Parks[dataSet$Car.Parks == ""] <- "0"
   dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- "0"
   
+  
+  
+### Remove and Format Size column  
 # Remove the rows where $Size value is empty, "NA"
   dataSet <- dataSet[!(dataSet$Size == "" | is.na(dataSet$Size)), ]
+  nrow(dataSet)
   
 # Separate the data in the `Size` column in the original dataset into 2 columns, which are `Area Type` and `Size`.
-# `Size` column is character type
-# *** Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
+  # `Size` column is character type
+  # Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
   dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
   
-# Clean the `Size` column, by removing "sq. ft." and commas, and handle multiplication sign "x" (if present).
-# *** Remove "sq. ft."
-  dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
   
-# *** Remove commas
+# Clean the `Size` column, by removing "sq. ft." and commas
+  # Remove "sq. ft."
+  dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
+  # Remove commas
   dataSet$Size <- gsub(",", "", dataSet$Size)
+  
+  
+# Identify values that need processing 
+  size_values_to_process <- dataSet$Size[grepl("[^0-9]", dataSet$Size)]
+  
+  # Process values with non-digit characters
+  for (value in size_values_to_process) {
+    if (grepl("\\+", value)) {
+      # Addition
+      parts <- strsplit(value, "\\+")[[1]]
+      result <- sum(as.numeric(parts))
+    } else if (grepl("-", value)) {
+      # Subtraction
+      parts <- strsplit(value, "-")[[1]]
+      result <- as.numeric(parts[1]) - sum(as.numeric(parts[-1]))
+    } else if (grepl("x", value)) {
+      # Multiplication
+      parts <- strsplit(value, "x")[[1]]
+      result <- prod(as.numeric(parts))
+    } else if (grepl("/", value)) {
+      # Division
+      parts <- strsplit(value, "/")[[1]]
+      result <- as.numeric(parts[1]) / prod(as.numeric(parts[-1]))
+    } else {
+      # No operation needed
+      result <- as.numeric(value)
+    }
+    
+    # Replace the original value with the result
+    dataSet$Size[dataSet$Size == value] <- result
+  }  
+  
+# Remove "-"  
+  dataSet$Size <- gsub("-", "", dataSet$Size)  # Remove "-"
+  
+#Replacing empty strings and NA with 0 in the $Size column
+  # Replace NA values with 0
+  dataSet$Size[is.na(dataSet$Size)] <- 0
+  # Replace "" values with 0
+  dataSet$Size <- ifelse(dataSet$Size == "", 0, dataSet$Size)
+  
+# Change the $Size column to integer
+  dataSet$Size <- as.integer(dataSet$Size)
+  
+###  
+  
 
-# *** Handle multiplication sign "x" (if present)
-# Split Size into two columns based on "x" and convert to numeric
-  dataSet$Size <- ifelse(grepl("x", dataSet$Size),
-                         sapply(strsplit(dataSet$Size, "x"), function(x) as.numeric(x[1]) * as.numeric(x[2])),
-                         as.numeric(dataSet$Size))
-  dataSet
-  nrow(dataSet)
 
 # Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
-# *** Separate Property.Type column into PropertyType and PropertyStyle
+  # Separate Property.Type column into PropertyType and PropertyStyle
   dataSet <- separate(dataSet, Property.Type, into = c("Property.Type", "Property.Style"), sep = "\\(")
-# *** Remove the trailing bracket in Property.Style column
+  # Remove the trailing bracket in Property.Style column
   dataSet$Property.Style <- gsub("\\)", "", dataSet$Property.Style)
   
 # Replace empty values/strings in ` Property Style` column with NA, using `na_if` function.
   dataSet <- dataSet %>%
     mutate(Property.Style = na_if(Property.Style, ""))
-  dataSet
+
 
 # Step 4: Data Analysis
 # -----------------------------------------------------
