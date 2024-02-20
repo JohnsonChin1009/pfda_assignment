@@ -230,7 +230,381 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
 
 # Loo Hui En TP065181 (Objective 1)
 # -----------------------------------------------------
-# Add your code here
+  # Objective 1: To investigate the relationship between the property types and property prices.
+  
+  # Analysis 1-1: Does property type impact the average price?
+  
+  # line graph
+  # remove leading and trailing spaces from character strings
+  dataSet$Property.Type <- trimws(dataSet$Property.Type)
+  
+  # Calculate average price for each property type
+  average_price_by_type <- dataSet %>%
+    group_by(Property.Type) %>%
+    summarize(Average_Price = mean(Price, na.rm = TRUE))
+  
+  # Create a line graph
+  ggplot(average_price_by_type, aes(x = reorder(Property.Type, Average_Price), y = Average_Price, group = 1)) +
+    geom_line(color = "#1f7b84") +  # Line color
+    geom_point(color = "#00bfff", size = 3) +  # Point color and size
+    geom_text(aes(label = scales::comma(Average_Price)), vjust = -1.5, hjust = 0.5, size = 2.5) + 
+    labs(
+      title = "Average Price by Property Type",
+      x = "Property Type",
+      y = "Average Price (RM)"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Increase label size
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 10),
+      plot.title = element_text(size = 12, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold")
+    ) +
+    scale_y_continuous(labels = scales::comma, breaks = seq(0, max(average_price_by_type$Average_Price), by = 500000)) +
+    coord_cartesian(clip = 'off')  # Prevent clipping of points outside the plot area
+  
+  # Analysis 1-2: Does the property style of each property type impact the average price?
+  
+  # heat map
+  # remove leading and trailing spaces from character strings
+  dataSet$Property.Type <- trimws(dataSet$Property.Type)
+  
+  # Group by Property.Type and summarize the Property.Style
+  property_styles_summary <- dataSet %>%
+    group_by(Property.Type) %>%
+    summarise(Property.Style = toString(unique(Property.Style)))
+  
+  # Split the Property_Styles into separate rows
+  property_styles_summary <- property_styles_summary %>%
+    separate_rows(Property.Style, sep = ", ") %>%
+    mutate(Property.Style = trimws(Property.Style))  # Remove leading/trailing whitespaces
+  
+  # Print the result
+  print(property_styles_summary,n=97)
+  
+  # Calculate average price for each combination of Property.Type and Property.Style
+  avg_price_by_type_style <- dataSet %>%
+    group_by(Property.Type, Property.Style) %>%
+    summarize(Average_Price = mean(Price, na.rm = TRUE))
+  
+  # Create a heatmap with a modified color scale
+  ggplot(avg_price_by_type_style, aes(x = Property.Style, y = Property.Type, fill = Average_Price)) +
+    geom_tile(color = "white") +
+    scale_fill_gradientn(
+      colors = c("#e4bcad", "#df979e", "#d7658b", "#c80064"),  
+      labels = scales::comma_format(accuracy = 1)  # Format labels with comma and 1 decimal place
+    ) +
+    labs(
+      title = "Average Price by Property Type and Style",
+      x = "Property Style",
+      y = "Property Type",
+      fill = "Average Price (RM)"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 8),
+      plot.title = element_text(size = 12, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold")
+    )
+  
+  # Analysis 1-3: How is the distribution of for corner and intermediate property style?
+  
+  # violin chart
+  # Filter property style by Corner and Intermediate
+  filtered_data <- dataSet %>%
+    filter(Property.Style %in% c("Corner", "Intermediate"))
+  
+  # Plot the violin plot
+  ggplot(filtered_data, aes(x = Property.Style, y = Price, fill = Property.Style)) +
+    geom_violin(trim = FALSE)+
+    geom_boxplot(width = 0.1, color = "black", position = position_dodge(0.75)) +
+    scale_fill_manual(values = c("#dbc7ed", "#b8b4c4")) +
+    labs(
+      title = "Distribution by Property Style",
+      x = "Property Style",
+      y = "Average Price (RM)"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 8),
+      plot.title = element_text(size = 12, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold")
+    ) +
+    scale_y_continuous(labels = scales::comma)
+  
+  
+  # Analysis 1-4: How frequently each property styles is being listed for each property type?
+  
+  # facet bar plot
+  # remove leading and trailing spaces from character strings
+  dataSet$Property.Type <- trimws(dataSet$Property.Type)
+  
+  # Group by Property.Type and Property.Style, then count the occurrences
+  style_counts <- dataSet %>%
+    group_by(Property.Type, Property.Style) %>%
+    summarize(count = n())
+  
+  # View the result
+  print(style_counts,n=97)
+  
+  # Create a bar chart for each Property.Type
+  ggplot(style_counts, aes(x = Property.Style, y = count, fill = Property.Style)) +
+    geom_bar(stat = "identity") +
+    facet_wrap(~ Property.Type, scales = "free_y", ncol = 3) +
+    labs(
+      title = "Distribution of Property Styles by Property Type",
+      x = "Property Style",
+      y = "Count"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 8),
+      plot.title = element_text(size = 12, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold")
+    )
+  
+  # Analysis 1-5: Which property type is most frequently being listed?
+  
+  # Bar plot
+  # Remove leading and trailing spaces from character strings
+  dataSet$Property.Type <- trimws(dataSet$Property.Type)
+  
+  # Count occurrences of each property type
+  property_type_counts <- dataSet %>% 
+    count(Property.Type) %>%
+    arrange(desc(n))  # Arrange in descending order
+  
+  # Print the results
+  print(property_type_counts)
+  
+  # Define 18 custom colors
+  custom_colors <- c("#e27c7c", "#a86464", "#6d4b4b", "#503f3f", "#333333", "#3c4e4b", "#466964", "#599e94", "#6cd4c5",
+                     "#54bebe", "#76c8c8", "#98d1d1", "#badbdb", "#dedad2", "#e4bcad", "#df979e", "#d7658b", "#c80064"
+  )
+  
+  ggplot(property_type_counts, aes(x = reorder(Property.Type, -n), y = n, fill = Property.Type)) +
+    geom_bar(stat = "identity") +
+    labs(
+      title = "Property Type Distribution",
+      x = "Property Type",
+      y = "Count",
+      fill = "Property Type"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold"),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 8)
+    ) +
+    coord_flip() +  # Swap x and y axes
+    scale_fill_manual(values = custom_colors) +  # Set custom colors
+    geom_text(aes(label = n), hjust = -0.2, size = 3, color = "black")  # Add labels
+  
+  # Analysis 1-6: Which property style is most frequently being listed for condominium?
+  # Count property styles within Condominium
+  condo_style_counts <- dataSet %>%
+    filter(Property.Type == "Condominium") %>%
+    count(Property.Style)
+  
+  # Arrange property styles by count in ascending order
+  condo_style_counts <- condo_style_counts %>%
+    arrange(n)
+  
+  # Lollipop chart for property style distribution within Condominium
+  ggplot(condo_style_counts, aes(x = reorder(Property.Style, n), y = n)) +
+    geom_segment(aes(xend = reorder(Property.Style, n), yend = 0), color = "skyblue") +
+    geom_point(size = 3, color = "blue") +
+    geom_text(aes(label = n), vjust = -0.5) +
+    labs(
+      title = "Property Style Distribution within Condominium",
+      x = "Property Style",
+      y = "Count"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 8)
+    )
+  
+  # Analysis 1-7: Which property style has a higher average price?
+  
+  # violin plot
+  # Calculate average price for each style within Condominium
+  condo_avg_price <- dataSet %>%
+    filter(Property.Type == "Condominium") %>%
+    group_by(Property.Style) %>%
+    summarize(Avg_Price = mean(Price, na.rm = TRUE))
+  
+  # Arrange the styles by average price in ascending order
+  condo_avg_price <- condo_avg_price %>%
+    arrange(Avg_Price)
+  
+  
+  # Violin plot for average price distribution within Condominium
+  ggplot(dataSet[dataSet$Property.Type == "Condominium", ], 
+         aes(x = Property.Style, y = Price, fill = Property.Style)) +
+    geom_violin(trim = FALSE) +
+    geom_boxplot(width = 0.1, color = "black", position = position_dodge(0.75)) +
+    labs(
+      title = "Average Price Distribution within Condominium",
+      x = "Property Style",
+      y = "Average Price (RM)",
+      fill = "Property Style"
+    ) +
+    scale_fill_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3", "#ffed6f")) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 8),
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold")
+    ) +
+    scale_y_continuous(labels = scales::comma)
+  
+  
+  # Analysis 1-8: What is the range of property price based on property group?
+  
+  # remove leading and trailing spaces from character strings
+  dataSet$Property.Type <- trimws(dataSet$Property.Type)
+  
+  # Print unique values after removing extra spaces
+  unique_property_types <- unique(dataSet$Property.Type)
+  print(unique_property_types)
+  
+  # Categorize property type into property group
+  categorize_by_property_group <- dataSet %>%
+    mutate(Property_Group = case_when(
+      grepl("Terrace/Link House", Property.Type) ~ "Terrace/Link Houses",
+      grepl("Bungalow", Property.Type) ~ "Bungalows",
+      grepl("Apartment|Flat", Property.Type) ~ "Apartments/Flats",
+      grepl("Cluster House", Property.Type) ~ "Cluster Houses",
+      grepl("Condominium", Property.Type) ~ "Condominiums",
+      grepl("Semi-detached House", Property.Type) ~ "Semi-detached Houses",
+      grepl("Serviced Residence", Property.Type) ~ "Serviced Residences",
+      grepl("Townhouse", Property.Type) ~ "Townhouses",
+      grepl("Residential Land", Property.Type) ~ "Residential Land",
+      TRUE ~ "Other"
+    ))
+  
+  
+  # Calculate the median price for each property group and arrange in ascending order
+  median_price_by_group <- categorize_by_property_group %>%
+    group_by(Property_Group) %>%
+    summarize(Median_Price = median(Price, na.rm = TRUE)) %>%
+    arrange(Median_Price)
+  median_price_by_group
+  
+  # Reorder the levels of Property_Group from shortest to tallest
+  median_price_by_group$Property_Group <- factor(
+    median_price_by_group$Property_Group,
+    levels = median_price_by_group$Property_Group[order(median_price_by_group$Median_Price)]
+  )
+  
+  # Add a new column for Price_Range based on median price
+  median_price_by_group <- median_price_by_group %>%
+    mutate(
+      Price_Range = case_when(
+        Median_Price <= 500000 ~ "<=RM500,000",
+        Median_Price > 500000 & Median_Price <= 1000000 ~ "RM500,001 - RM1,000,000",
+        Median_Price > 1000000 & Median_Price <= 1500000 ~ "RM1,000,001 - RM1,500,000",
+        Median_Price > 1500000 ~ ">RM1,500,000"
+      )
+    )
+  
+  # Define a custom color palette
+  custom_color_palette <- c("#3e5282", "#6c81c0", "#84a5e3", "#8b83c6")
+  
+  # Specify the order of Price Range
+  price_range_order <- c("<=RM500,000", "RM500,001 - RM1,000,000", "RM1,000,001 - RM1,500,000", ">RM1,500,000")
+  
+  # Visualize property groups and their median prices
+  ggplot(median_price_by_group, aes(x = Property_Group, y = Median_Price, fill = factor(Price_Range, levels = price_range_order))) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = sprintf("%.0f", Median_Price)), vjust = -0.5, size = 3) +
+    labs(
+      title = "Property price based on property group",
+      x = "Property Group",
+      y = "Median Price (RM)"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 8)
+    ) +
+    scale_y_continuous(
+      labels = scales::comma,
+      breaks = seq(0, max(median_price_by_group$Median_Price), by = 1000000)
+    ) +
+    labs(fill = "Price Range") +
+    guides(fill = guide_legend(title = "Price Range")) +
+    scale_fill_manual(values = custom_color_palette)
+  
+  
+  # Analysis 1-9: What is the average property price for each property style under the property group?
+  
+  # Facet bar
+  
+  # remove leading and trailing spaces from character strings
+  dataSet$Property.Type <- trimws(dataSet$Property.Type)
+  
+  # Print unique values after removing extra spaces
+  unique_property_types <- unique(dataSet$Property.Type)
+  print(unique_property_types)
+  
+  # Categorize property type into property group
+  categorize_by_property_group <- dataSet %>%
+    mutate(Property_Group = case_when(
+      grepl("Terrace/Link House", Property.Type) ~ "Terrace/Link Houses",
+      grepl("Bungalow", Property.Type) ~ "Bungalows",
+      grepl("Apartment|Flat", Property.Type) ~ "Apartments/Flats",
+      grepl("Cluster House", Property.Type) ~ "Cluster Houses",
+      grepl("Condominium", Property.Type) ~ "Condominiums",
+      grepl("Semi-detached House", Property.Type) ~ "Semi-detached Houses",
+      grepl("Serviced Residence", Property.Type) ~ "Serviced Residences",
+      grepl("Townhouse", Property.Type) ~ "Townhouses",
+      grepl("Residential Land", Property.Type) ~ "Residential Land",
+      TRUE ~ "Other"
+    ))
+  
+  # Calculate the mean price for each property style
+  avg_price_data <- categorize_by_property_group %>%
+    group_by(Property_Group, Property.Style) %>%
+    summarize(Average_Price = mean(Price, na.rm = TRUE))
+  avg_price_data
+  
+  # Define the custom color palette
+  custom_color_palette <- c("#ea5545", "#f46a9b", "#ef9b20", "#edbf33", "#ede15b", "#bdcf32", "#87bc45", "#27aeef", "#b33dc6")
+  
+  # Create a bar chart in a 3x3 grid with the specified color palette
+  ggplot(data = avg_price_data, aes(x = Property.Style, y = Average_Price, fill = Property_Group)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(
+      title = "Average Price by Property Style Under Property Group",
+      x = "Property Style",
+      y = "Average Price (RM)"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      axis.text.y = element_text(size = 8),
+      text = element_text(size = 8)
+    ) +
+    scale_y_continuous(labels = scales::comma) +
+    labs(fill = "Property Group") +
+    facet_wrap(~Property_Group, scales = "free_x", ncol = 3) +
+    scale_fill_manual(values = custom_color_palette)
+  
 # -----------------------------------------------------
   
 # Yong Jie Yee TP078458 (Objective 2)
