@@ -77,8 +77,6 @@ library(tidyr)
 
 ###
 # Formatting the $Rooms column into integer data type  
-  initialCount <- sum(is.na(dataSet$Rooms) | dataSet$Rooms == "")
-  
   dataSet <- dataSet %>%
     mutate(
       # Convert "Studio" to 1
@@ -156,8 +154,6 @@ library(tidyr)
   dataSet$Size <- gsub(",", "", dataSet$Size)
 
 # *** Handle multiplication sign "x" (if present)
-  
-## ISSUE IS HERE
 # Split Size into two columns based on "x" and convert to numeric
   dataSet$Size <- ifelse(grepl("x", dataSet$Size),
                          sapply(strsplit(dataSet$Size, "x"), function(x) as.numeric(x[1]) * as.numeric(x[2])),
@@ -204,7 +200,15 @@ library(tidyr)
     geom_bar(stat = "identity") +
     labs(title = "Average Property Prices by Furnishing Status", x = "Furnishing Status", y = "Average Price (RM)") +
     theme_minimal()
-# Analysis 2: Analysis 
+  
+# Analysis 2: Analysis of Distribution of Furnishing Status
+  furnishingCounts <- dataSet %>% count(Furnishing)
+  
+  ggplot(dataSet, aes(x = Furnishing, y = Price, fill = Furnishing)) +
+    geom_violin() +
+    scale_fill_brewer(palette = "Set2") +
+    labs(title = "Distribution of Furnishing Status", x = "Furnishing Status", y = "Price") +
+    theme_minimal()
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
