@@ -16,12 +16,22 @@ dataSet = read.csv("kl_property_data.csv")
 # and what are the data types present in the data set
 
 # Initiating dependencies
+  install.packages("tidyverse")
+  install.packages("dplyr")
+  install.packages("ggplot")
+  install.packages("ggplot2")
+  install.packages("tidyr")
+  install.packages("Hmisc")
+  install.packages("plotly")
 
-library(tidyverse)
-library(dplyr)
-library(stringr)
-library(ggplot2)
-library(tidyr)
+# Attach libraries to RStudio
+  library(tidyverse)
+  library(dplyr)
+  library(stringr)
+  library(ggplot2)
+  library(tidyr)
+  library(Hmisc)
+  library(plotly)
 
 ## Exploring variable types in the data set
   str(dataSet)
@@ -138,8 +148,6 @@ library(tidyr)
   dataSet$Car.Parks[dataSet$Car.Parks == ""] <- "0"
   dataSet$Car.Parks[is.na(dataSet$Car.Parks)] <- "0"
   
-  
-  
 ### Remove and Format $Size column  
 
 # Remove rows where $Size value is empty, "NA"
@@ -151,42 +159,39 @@ library(tidyr)
   # Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
   dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
   
-  
 # Clean the `Size` column, by removing "sq. ft." and commas
-  # Remove "sq. ft."
-  dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
-  # Remove commas
-  dataSet$Size <- gsub(",", "", dataSet$Size)
+  dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size) # Remove "sq. ft."
+  dataSet$Size <- gsub(",", "", dataSet$Size) # Remove commas
   
   
 # Identify `Size` column values that need processing 
   size_values_to_process <- dataSet$Size[grepl("[^0-9]", dataSet$Size)]
   
   # Process values with non-digit characters
-  for (value in size_values_to_process) {
-    if (grepl("\\+", value)) {
-      # Addition
-      parts <- strsplit(value, "\\+")[[1]]
-      result <- sum(as.numeric(parts))
-    } else if (grepl("-", value)) {
-      # Subtraction
-      parts <- strsplit(value, "-")[[1]]
-      result <- as.numeric(parts[1]) - sum(as.numeric(parts[-1]))
-    } else if (grepl("x", value)) {
-      # Multiplication
-      parts <- strsplit(value, "x")[[1]]
-      result <- prod(as.numeric(parts))
-    } else if (grepl("/", value)) {
-      # Division
-      parts <- strsplit(value, "/")[[1]]
-      result <- as.numeric(parts[1]) / prod(as.numeric(parts[-1]))
-    } else {
-      # No operation needed
-      result <- as.numeric(value)
-    }
+    for (value in size_values_to_process) {
+      if (grepl("\\+", value)) {
+        # Addition
+        parts <- strsplit(value, "\\+")[[1]]
+        result <- sum(as.numeric(parts))
+      } else if (grepl("-", value)) {
+        # Subtraction
+        parts <- strsplit(value, "-")[[1]]
+        result <- as.numeric(parts[1]) - sum(as.numeric(parts[-1]))
+      } else if (grepl("x", value)) {
+        # Multiplication
+        parts <- strsplit(value, "x")[[1]]
+        result <- prod(as.numeric(parts))
+      } else if (grepl("/", value)) {
+        # Division
+        parts <- strsplit(value, "/")[[1]]
+        result <- as.numeric(parts[1]) / prod(as.numeric(parts[-1]))
+      } else {
+        # No operation needed
+        result <- as.numeric(value)
+      }
     
     # Replace original value in `Size` column with the result
-    dataSet$Size[dataSet$Size == value] <- result
+      dataSet$Size[dataSet$Size == value] <- result
   }  
   
 # Remove "-" in the `Size` column
@@ -203,7 +208,6 @@ library(tidyr)
   
 ###  
   
-
 # Separate Property.Type column into Property.Type and Property.Style
 dataSet <- dataSet %>%
   mutate(Property.Style = ifelse(grepl("\\(", Property.Type), 
@@ -606,7 +610,6 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
     scale_fill_manual(values = custom_color_palette)
   
 # -----------------------------------------------------
-  
 # Yong Jie Yee TP078458 (Objective 2)
 # -----------------------------------------------------
   # Objective 2: Does properties that have a proportionate number of rooms and bathrooms have a higher price?
@@ -851,8 +854,7 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   ) +
   scale_color_manual(values = c("blue", "red"), labels = c("Bathrooms", "Rooms"))
   
- # -----------------------------------------------------
-  
+# -----------------------------------------------------
 # Chin Hong Wei TP065390 (Objective 3)
 # -----------------------------------------------------
 # Analysis 1: Analysis of Average Property Prices by Furnishing Status
@@ -862,7 +864,8 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
     summarize(AveragePricebyFurnishingStatus = mean(Price, na.rm = TRUE))
   
   # Visualize the results using a bar chart
-  ggplot(averagePricebyFurnishingStatus, aes(x = Furnishing, y = AveragePricebyFurnishingStatus, fill = Furnishing)) +
+  ggplot(averagePricebyFurnishingStatus, 
+    aes(x = Furnishing, y = AveragePricebyFurnishingStatus, fill = Furnishing)) +
     geom_bar(stat = "identity") +
     labs(title = "Average Property Prices by Furnishing Status", x = "Furnishing Status", y = "Average Price (RM)") +
     theme_minimal()
@@ -877,15 +880,48 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
     theme_minimal() +
     theme(legend.position = "bottom")
   
-# Analysis 3: Analysis of correlation between property type and the likelihood of it being furnished.
+# Analysis 3: Analysis of correlation between number of rooms of a property and the likelihood of it being furnished.
+  ggplot(dataSet, aes(x = Furnishing, y = as.numeric(Rooms), fill = Furnishing)) +
+    geom_violin() +
+    labs(title = "Relationship between Furnishing Status and Number of Rooms",
+         x = "Furnishing Status", y = "Number of Rooms", fill = "Furnishing Status") +
+    theme_minimal()
+
+# Additional Feature #1
+  # Calculating the anova for Analysis 3
+    anova_result <- aov(as.numeric(Rooms) ~ Furnishing, data = dataSet)
   
+  # Plotting the Anova Result
+    boxplot(response_variable ~ factor(group_variable), data = your_data, 
+            main = "Boxplot of Response Variable by Group Variable",
+            xlab = "Group Variable", ylab = "Response Variable")
+
+# Additional Feature #2
+    property_furnishing_counts <- dataSet %>% count(Property.Style, Furnishing)
+    
+    # Create a TreeMap using plotly
+    fig <- plot_ly(
+      type = "treemap",
+      labels = ~paste(Property.Style, " - ", Furnishing),
+      parents = ~"",
+      values = ~n,
+      branchvalues = "total",
+      data = property_furnishing_counts
+    )
+    
+    # Customize the layout
+    fig <- fig %>% layout(title = "TreeMap of Property Styles and Furnishing")
+    
+    # Project the TreeMap of (Property Styles . Furnishing)
+    fig
+    
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
 # -----------------------------------------------------
 # Objective 4: To investigate the relationship between property size and property prices in Kuala Lumpur.
 
-#Descriptive Analysis
+# Descriptive Analysis
   
 # Analysis 1: What is the distribution of property prices based on their size and area type in Kuala Lumpur?
 # Visualization Technique: Grouped Bar Chart
@@ -927,9 +963,7 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
          fill = "Area Type") +
     theme_grey() +
     scale_y_discrete() 
-  
-  
-  
+
 # Analysis 3:	What is the average property price per square foot for different are types in Kuala Lumpur?
 # Visualization Technique: Grouped Bar Chart
   
@@ -957,8 +991,6 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
          fill = "Area Type") +
     theme_grey() +
     scale_y_continuous(labels = scales::comma)
-  
-  
   
 # Analysis 4: What are the average property prices for different property size?
 # Visualization Technique: Grouped Bar Chart
@@ -988,9 +1020,7 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
     scale_fill_manual(values = size_range_colors, name = "Size Range (sqft)") +  
     scale_y_continuous(labels = scales::comma) +
     theme(legend.position = "right")  
-  
-  
-  
+
 # Prescriptive Analysis - Questions
   
 # Analysis 5: How can property developers optimize property prices based on size and area type in Kuala Lumpur?
@@ -1050,33 +1080,4 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
     scale_y_continuous(labels = scales::comma)  
   
   
-  
 # -----------------------------------------------------
-
-
-# Step 12:	Replace the empty values/strings in `Size` column with NA, using `na_if` function from the “dplyr” package.
-library(dplyr)
-# *** Replace empty strings with <NA> in the `Size` column
-dataSet <- dataSet %>%
-  mutate(Size = na_if(Size, ""))
-dataSet
-nrow(dataSet)
-
-
-
-# Step 15: Replace empty values/strings in `Area Type` column with NA, using `na_if` function.
-library(dplyr)
-dataSet <- dataSet %>%
-  mutate(Area.Type = na_if(Area.Type, ""))
-dataSet
-nrow(dataSet)
-
-
-
-
-
-
-
-
-#Extra Notes
-# Cannot go below 51189
