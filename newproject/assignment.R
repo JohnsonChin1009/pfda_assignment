@@ -480,11 +480,15 @@ ggplot(combined_data, aes(x = Bathroom_Range)) +
 # Analysis 2: Analysis of Distribution of Furnishing Status
   furnishingCounts <- dataSet %>% count(Furnishing)
   
-  ggplot(dataSet, aes(x = Furnishing, y = Price, fill = Furnishing)) +
-    geom_violin() +
-    scale_fill_brewer(palette = "Set2") +
-    labs(title = "Distribution of Furnishing Status", x = "Furnishing Status", y = "Price") +
-    theme_minimal()
+  # Create a stacked bar chart using ggplot2
+  ggplot(furnishingCounts, aes(x = Furnishing, y = n, fill = Furnishing)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Distribution of Furnishing Status", x = "Furnishing Status", y = "Count") +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+  
+# Analysis 3: Analysis of correlation between property type and the likelihood of it being furnished.
+  
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
