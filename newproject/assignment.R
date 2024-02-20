@@ -119,7 +119,6 @@ library(tidyr)
   # Change Rooms and Bathrooms to NA for the identified rows
     dataSet$Rooms[residential_land_rows] <- NA
     dataSet$Bathrooms[residential_land_rows] <- NA
-    view(dataSet)
 
 ## Standardize the $Furnishing column ensuring no N/A values
   # Extract furnishing information using regular expression
@@ -148,21 +147,17 @@ library(tidyr)
 # `Size` column is character type
 # *** Separate `Size` column into `Area Type` and `Size`, Use the `separate` function from the `tidyr` package in R
   dataSet <- separate(dataSet, Size, into = c("Area.Type", "Size"), sep = ": ")
-  dataSet
-  nrow(dataSet)
-  
-  
   
 # Clean the `Size` column, by removing "sq. ft." and commas, and handle multiplication sign "x" (if present).
 # *** Remove "sq. ft."
   dataSet$Size <- gsub(" sq\\. ft\\.", "", dataSet$Size)
-  dataSet
-  nrow(dataSet)
+  
 # *** Remove commas
   dataSet$Size <- gsub(",", "", dataSet$Size)
-  dataSet
-  nrow(dataSet)
+
 # *** Handle multiplication sign "x" (if present)
+  
+## ISSUE IS HERE
 # Split Size into two columns based on "x" and convert to numeric
   dataSet$Size <- ifelse(grepl("x", dataSet$Size),
                          sapply(strsplit(dataSet$Size, "x"), function(x) as.numeric(x[1]) * as.numeric(x[2])),
@@ -198,24 +193,18 @@ library(tidyr)
   
 # Chin Hong Wei TP065390 (Objective 3)
 # -----------------------------------------------------
-# Analysis 1: Analyis of Distribution of Furnishing Status
-  furnishing_counts <- table(dataSet$Furnishing)
-
-# Create a data frame from the table
-furnishing_data <- as.data.frame(furnishing_counts)
-furnishing_data$Furnishing <- rownames(furnishing_data)
-
-# Calculate percentages
-furnishing_data$Percentage <- (furnishing_data$Freq / sum(furnishing_data$Freq)) * 100
-
-# Plot using ggplot2
-ggplot(furnishing_data, aes(x = "", y = Freq, fill = Furnishing)) +
-  geom_bar(stat = "identity", width = 1) +
-  coord_polar(theta = "y") +
-  theme_bw() +
-  theme(legend.position = "bottom") +
-  geom_text(aes(label = paste(round(Percentage, 1), "%")), position = position_stack(vjust = 0.5)) +
-  labs(title = "Distribution of Furnishing Status")
+# Analysis 1: Analysis of Average Property Prices by Furnishing Status
+  # Group dataset by furnishing status and calculate mean price for each group
+  averagePricebyFurnishingStatus <- dataSet %>%
+    group_by(Furnishing) %>%
+    summarize(AveragePricebyFurnishingStatus = mean(Price, na.rm = TRUE))
+  
+  # Visualize the results using a bar chart
+  ggplot(averagePricebyFurnishingStatus, aes(x = Furnishing, y = AveragePricebyFurnishingStatus, fill = Furnishing)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Average Property Prices by Furnishing Status", x = "Furnishing Status", y = "Average Price (RM)") +
+    theme_minimal()
+# Analysis 2: Analysis 
 # -----------------------------------------------------
   
 # Lim Ee Chian TP065138 (Objective 4)
