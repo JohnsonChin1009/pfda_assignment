@@ -204,11 +204,19 @@ library(tidyr)
   
 
 
-# Separate the data in the `Property Type` column into 2 columns, which are `Property Type` and `Property Style`.
-  # Separate Property.Type column into PropertyType and PropertyStyle
-  dataSet <- separate(dataSet, Property.Type, into = c("Property.Type", "Property.Style"), sep = "\\(")
-  # Remove the trailing bracket in Property.Style column
-  dataSet$Property.Style <- gsub("\\)", "", dataSet$Property.Style)
+# Separate Property.Type column into Property.Type and Property.Style
+dataSet <- dataSet %>%
+  mutate(Property.Style = ifelse(grepl("\\(", Property.Type), 
+                                 str_extract(Property.Type, "\\(.+\\)"), NA),
+         Property.Type = ifelse(!is.na(Property.Style),
+                                str_remove_all(Property.Type, "\\(.+\\)"), 
+                                Property.Type))
+
+# Remove leading and trailing spaces from Property.Style
+dataSet$Property.Style <- trimws(dataSet$Property.Style)
+
+# Remove parentheses from Property.Style
+dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   
 # Replace empty values/strings in ` Property Style` column with NA, using `na_if` function.
   dataSet <- dataSet %>%
