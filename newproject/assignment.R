@@ -10,6 +10,8 @@
 # -----------------------------------------------------
 dataSet = read.csv("kl_property_data.csv")
 
+
+
 # Step 2: Data Exploration
 # -----------------------------------------------------
 # Exploring the data to further understand how the data is structured
@@ -222,6 +224,8 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   dataSet <- dataSet %>%
     mutate(Property.Style = na_if(Property.Style, ""))
 
+  dataSet
+  nrow(dataSet)
 
 # Step 4: Data Analysis
 # -----------------------------------------------------
@@ -235,7 +239,228 @@ dataSet$Property.Style <- gsub("[()]", "", dataSet$Property.Style)
   
 # Yong Jie Yee TP078458 (Objective 2)
 # -----------------------------------------------------
-# Add your code here
+  # Question 1: Does properties that have a proportionate number of rooms and bathrooms have a higher price?
+  
+  # Analysis 1.1: What are the average property prices for numbers of rooms?
+  # Load necessary libraries
+  library(ggplot2)
+  library(dplyr)
+  
+  # Assuming 'dataSet' is your dataset
+  
+  # Convert the Rooms column to numeric
+  dataSet$Rooms <- as.numeric(dataSet$Rooms)
+  
+  # Check if there are any non-numeric values or missing values in the Rooms column
+  non_numeric_rooms <- dataSet[!grepl("^\\d+$", as.character(dataSet$Rooms)) | is.na(dataSet$Rooms), ]
+  print(non_numeric_rooms)
+  
+  # Once you ensure that the Rooms column contains only numeric values, you can proceed with creating ranges.
+  
+  # Categorize rooms into ranges
+  dataSet$Room_Range <- cut(dataSet$Rooms, breaks = c(0, 2, 4, 6, 8, 10, 12, Inf), labels = c("1-2", "3-4", "5-6", "7-8", "9-10", "11-12", "12+"))
+  
+  # Calculate the average property prices for different ranges of rooms
+  average_prices_by_room_range <- dataSet %>%
+    group_by(Room_Range) %>%
+    summarize(Average_Price = mean(Price, na.rm = TRUE))
+  
+  # Visualize the results using a bar plot with customized aesthetics
+  ggplot(average_prices_by_room_range, aes(x = Room_Range, y = Average_Price, fill = Room_Range)) +
+    geom_bar(stat = "identity", color = "black") +  # Set bar outline color
+    geom_text(aes(label = paste0(round(Average_Price, 2)), y = Average_Price), vjust = -0.5, size = 3.5, color = "black") +  # Add price labels above the bars
+    labs(title = "Average Property Prices by Range of Rooms",
+         x = "Range of Rooms",
+         y = "Average Price") +
+    scale_y_continuous(labels = scales::comma) +  # Format y-axis labels with comma separator
+    theme_minimal() +  # Apply minimal theme for cleaner look
+    theme(legend.position = "none",  # Remove legend
+          axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+          panel.grid.major = element_line(color = "gray", linetype = "dashed"),  # Add dashed grid lines for major axes
+          panel.background = element_blank()  # Remove background lines
+    ) +
+    scale_fill_brewer(palette = "Set2")  # Set color palette for bars
+  
+  #Analysis 1.2 Which number of rooms is preferred by the market?
+  
+  library(ggplot2)
+  
+  # Categorize rooms into ranges (same ranges as used in the previous bar plot)
+  dataSet$Room_Range <- cut(dataSet$Rooms, 
+                            breaks = c(0, 2, 4, 6, 8, 10, 12, Inf), 
+                            labels = c("1-2", "3-4", "5-6", "7-8", "9-10", "11-12", "12+"))
+  
+  # Count the frequency of each range of rooms
+  room_frequency <- dataSet %>%
+    group_by(Room_Range) %>%
+    summarize(Frequency = n())
+  
+  # Plot the frequency of each range of rooms using a line graph
+  ggplot(room_frequency, aes(x = Room_Range, y = Frequency, color = Room_Range, group = 1)) +
+    geom_line() +
+    geom_point() +
+    labs(
+      title = "Frequency of Properties by Number of Rooms",
+      x = "Number of Rooms",
+      y = "Frequency"
+    ) +
+    theme_minimal() +
+    theme(
+      legend.position = "none",  # Remove legend
+      axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels
+    ) +
+    scale_color_brewer(palette = "Set2") +  # Set color palette for lines and points
+    geom_text(aes(label = Frequency, y = Frequency), vjust = -0.5, size = 3.5) # Add text labels with Frequency
+ 
+   # Analysis 1.3: What are the average property prices for numbers of bathrooms?
+  library(ggplot2)
+  library(scales)  # Load the scales package for formatting
+  
+  # Assuming you have a dataset named 'dataSet' containing information about properties
+  
+  # Categorize properties based on the number of bathrooms into ranges
+  dataSet$Bathroom_Range <- cut(dataSet$Bathrooms, 
+                                breaks = c(-Inf, 1, 3, 5, 8, Inf), 
+                                labels = c("0-1", "2-3", "4-5", "6-8", "9+"))
+  
+  # Calculate the average property price for each range of bathrooms
+  avg_price_by_bathroom <- dataSet %>%
+    group_by(Bathroom_Range) %>%
+    summarize(Average_Price = mean(Price))
+  
+  # Create the line graph
+  line_plot <- ggplot(avg_price_by_bathroom, aes(x = Bathroom_Range, y = Average_Price, group = 1)) +
+    geom_line(color = "#0072B2", size = 1.5) +  # Line color and size
+    geom_point(color = "#0072B2", size = 4, shape = 17, fill = "white") +  # Point color, size, and shape
+    labs(
+      title = "Average Property Prices by Range of Bathrooms",
+      x = "Number of Bathrooms",
+      y = "Average Price"
+    ) +
+    theme_minimal() +
+    theme(
+      legend.position = "none",  # Remove legend
+      axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+      axis.title = element_text(size = 12, face = "bold"),  # Axis title font size and weight
+      axis.text = element_text(size = 10),  # Axis text font size
+      plot.title = element_text(size = 16, face = "bold")  # Plot title font size and weight
+    ) +
+    scale_y_continuous(labels = scales::comma) +  # Format y-axis labels with commas
+    geom_text(aes(label = paste0(round(Average_Price / 1000, 1)), y = Average_Price), 
+              vjust = -0.5, color = "#0072B2", size = 4)  # Add text labels with price
+  # Display the line graph
+  print(line_plot)
+
+  # Analysis 1.4: Which number of bathrooms is preferred by the market?
+  
+  # Convert 'Bathrooms' to numeric
+  dataSet$Bathrooms <- as.numeric(as.character(dataSet$Bathrooms))
+  
+  # Now, you can proceed with the categorization and plotting
+  # Categorize bathrooms into ranges
+  dataSet$Bathroom_Range <- cut(dataSet$Bathrooms, 
+                                breaks = c(0, 1, 4, 7, 10, Inf), 
+                                labels = c("1", "2-4", "5-7", "8-9", "10+"))
+  
+  # Count the frequency of each range of bathrooms
+  bathroom_frequency <- dataSet %>%
+    group_by(Bathroom_Range) %>%
+    summarize(Frequency = n())
+  
+  # Calculate the percentage for each category
+  bathroom_frequency$Percentage <- bathroom_frequency$Frequency / sum(bathroom_frequency$Frequency) * 100
+  
+  # Plot the frequency of each range of bathrooms using a pie chart
+  library(ggplot2)
+  ggplot(bathroom_frequency, aes(x = "", y = Percentage, fill = Bathroom_Range)) +
+    geom_bar(stat = "identity", width = 1) +
+    coord_polar("y", start = 0) +  # Convert the bar chart into a pie chart
+    labs(
+      title = "Search Percentage of Properties by Number of Bathrooms",
+      fill = "Number of Bathrooms"
+    ) +
+    theme_void() +  # Remove unnecessary elements from the plot
+    geom_text(aes(label = paste0(round(Percentage, 2), "%")), position = position_stack(vjust = 0.5)) +
+    scale_fill_brewer(palette = "Set3")  # Set color palette for the pie chart
+  
+  #Analysis 1.5 What are the average property prices for numbers of bathrooms and numbers of rooms?
+  
+# Load necessary libraries
+library(ggplot2)
+# Calculate the number of rooms without attached bathrooms, rooms with attached bathrooms, and public bathrooms
+dataSet$Rooms_No_Attach_Bathroom <- pmax(0, dataSet$Rooms - dataSet$Bathrooms)
+dataSet$Rooms_With_Attach_Bathroom <- pmin(dataSet$Rooms, dataSet$Bathrooms)
+dataSet$Public_Bathrooms <- dataSet$Bathrooms - dataSet$Rooms_With_Attach_Bathroom
+
+# Categorize properties based on the relationship between rooms and bathrooms
+dataSet$Relationship <- case_when(
+  dataSet$Rooms > dataSet$Bathrooms ~ "All Rooms Attach Bathroom",
+  dataSet$Bathrooms == 1 ~ "All Rooms No Attach Bathroom",
+  dataSet$Public_Bathrooms > 1 ~ "Multiple Public Bathrooms",
+  TRUE ~ "Mixed Relationship"
+)
+# Calculate the average price for each category
+avg_price_by_bathroom_type <- dataSet %>%
+  group_by(Relationship) %>%
+  summarize(Avg_Price = mean(Price, na.rm = TRUE))
+
+# Print the average price for each category
+print(avg_price_by_bathroom_type)
+# Create a lollipop chart to visualize the average price based on the relationship between bathrooms and rooms
+ggplot(avg_price_by_bathroom_type, aes(x = Relationship, y = Avg_Price)) +
+  geom_segment(aes(xend = Relationship, yend = 0), color = "skyblue", size = 1.5) +  # Add segments with thicker lines
+  geom_point(color = "blue", size = 5, shape = 21, fill = "white") +  # Add larger points with white fill
+  labs(title = "Average Price based on Bathrooms and Rooms Relationship", x = "Relationship", y = "Average Price") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for better readability
+    axis.title = element_text(size = 14),  # Increase the font size of axis titles
+    plot.title = element_text(size = 18, hjust = 0.5),  # Adjust the title font size and alignment
+    panel.grid.major.y = element_line(color = "lightgray", linetype = "dashed")  # Add dashed horizontal grid lines
+  ) +
+  scale_y_continuous(labels = scales::comma)  # Format y-axis labels as comma-separated values
+
+
+
+#Analysis 1.6: How many of the number of bathrooms and rooms are more prefer by market.
+library(ggplot2)
+library(dplyr)
+# Categorize bathrooms into ranges
+dataSet$Bathroom_Range <- cut(dataSet$Bathrooms, breaks = c(-Inf, 1, 3, 5, 8, Inf), labels = c("0-1", "2-3", "4-5", "6-8", "9+"))
+# Count the frequency of each range of bathrooms
+bathroom_frequency <- dataSet %>%
+  group_by(Bathroom_Range) %>%
+  summarize(Bathroom_Frequency = n())
+# Categorize rooms into ranges
+dataSet$Room_Range <- cut(dataSet$Rooms, breaks = c(0, 2, 4, 6, 8, 10, 12, Inf), labels = c("1-2", "3-4", "5-6", "7-8", "9-10", "11-12", "12+"))
+# Count the frequency of each range of rooms
+room_frequency <- dataSet %>%
+  group_by(Room_Range) %>%
+  summarize(Room_Frequency = n())
+
+# Combine the data for both bathrooms and rooms
+combined_data <- merge(bathroom_frequency, room_frequency, by.x = "Bathroom_Range", by.y = "Room_Range", all = TRUE)
+
+# Plot the frequency of properties by number of bathrooms and rooms using a line graph
+ggplot(combined_data, aes(x = Bathroom_Range)) +
+  geom_line(aes(y = Bathroom_Frequency, color = "Bathrooms"), size = 1.5) +
+  geom_point(aes(y = Bathroom_Frequency, color = "Bathrooms"), size = 3) +
+  geom_line(aes(y = Room_Frequency, color = "Rooms"), linetype = "dashed", size = 1.5) +
+  geom_point(aes(y = Room_Frequency, color = "Rooms"), shape = 1, size = 3) +
+  geom_text(aes(y = ifelse(!is.na(Bathroom_Frequency), Bathroom_Frequency, Room_Frequency),
+                label = ifelse(!is.na(Bathroom_Frequency), as.character(Bathroom_Frequency), as.character(Room_Frequency))), 
+            hjust = -0.2, vjust = 0.5, size = 3.5, color = "black", fontface = "bold") +  
+  labs(
+    title = "Frequency of Properties by Number of Bathrooms and Rooms",
+    x = "Number of Bathrooms and Rooms",
+    y = "Frequency"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",  
+    axis.text.x = element_text(angle = 45, hjust = 1)  
+  ) +
+  scale_color_manual(values = c("blue", "red"), labels = c("Bathrooms", "Rooms"))
  # -----------------------------------------------------
   
 # Chin Hong Wei TP065390 (Objective 3)
@@ -284,7 +509,6 @@ dataSet <- dataSet %>%
   mutate(Area.Type = na_if(Area.Type, ""))
 dataSet
 nrow(dataSet)
-
 
 
 
